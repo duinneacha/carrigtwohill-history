@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carrigtwohill Historical Research Repository</title>
+<style>
+  :root {
+    --green:   #1a5c38;
+    --green-l: #2a7a4e;
+    --green-d: #0f3a22;
+    --gold:    #c8941a;
+    --gold-l:  #e8b030;
+    --parch:   #f7f3ec;
+    --parch-d: #ede7d9;
+    --border:  #d4c9b2;
+    --text:    #2c2416;
+    --muted:   #6b5e4a;
+    --white:   #ffffff;
+    --shadow:  0 2px 8px rgba(0,0,0,.12);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--parch);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, var(--green-d) 0%, var(--green) 60%, var(--green-l) 100%);
+    color: var(--white);
+    padding: 0;
+    box-shadow: 0 3px 12px rgba(0,0,0,.3);
+  }
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 24px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .header-crest {
+    font-size: 52px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.3));
+  }
+  .header-text h1 {
+    font-size: 1.9em;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 4px rgba(0,0,0,.3);
+  }
+  .header-text p {
+    font-size: .9em;
+    opacity: .85;
+    font-style: italic;
+    margin-top: 3px;
+  }
+  .header-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  /* ── STATS RIBBON ── */
+  .stats-ribbon {
+    background: var(--green-d);
+    border-top: 1px solid rgba(255,255,255,.15);
+  }
+  .stats-ribbon-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px 24px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .stat-chip {
+    color: rgba(255,255,255,.9);
+    font-size: .82em;
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .stat-chip strong { color: var(--gold-l); font-size: 1.1em; }
+  /* ── MAIN LAYOUT ── */
+  .main-wrap {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 24px;
+  }
+  /* ── SIDEBAR ── */
+  .sidebar { display: flex; flex-direction: column; gap: 20px; }
+  .panel {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .panel-head {
+    background: var(--green);
+    color: var(--white);
+    padding: 10px 16px;
+    font-family: 'Arial', sans-serif;
+    font-size: .85em;
+    font-weight: bold;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+  .panel-body { padding: 14px 16px; }
+  .filter-group { margin-bottom: 14px; }
+  .filter-group:last-child { margin-bottom: 0; }
+  .filter-group label {
+    display: block;
+    font-family: 'Arial', sans-serif;
+    font-size: .8em;
+    font-weight: bold;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    margin-bottom: 6px;
+  }
+  .filter-group select {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: .9em;
+    background: var(--parch);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .filter-group select:focus { outline: none; border-color: var(--green); }
+  .source-list { list-style: none; }
+  .source-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--parch-d);
+    font-size: .85em;
+  }
+  .source-list li:last-child { border-bottom: none; }
+  .source-list .src-name { color: var(--green); cursor: pointer; }
+  .source-list .src-name:hover { text-decoration: underline; }
+  .source-list .src-count {
+    background: var(--green);
+    color: white;
+    font-size: .75em;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-family: 'Arial', sans-serif;
+  }
+  /* ── SEARCH BAR ── */
+  .search-area { margin-bottom: 20px; }
+  .search-form { display: flex; gap: 10px; }
+  .search-input {
+    flex: 1;
+    padding: 12px 18px;
+    font-size: 1em;
+    font-family: 'Arial', sans-serif;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: var(--white);
+    color: var(--text);
+    transition: border-color .2s;
+  }
+  .search-input:focus { outline: none; border-color: var(--green); }
+  .btn {
+    padding: 10px 22px;
+    font-family: 'Arial', sans-serif;
+    font-size: .9em;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background .2s, transform .1s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary   { background: var(--green);   color: white; }
+  .btn-primary:hover { background: var(--green-l); }
+  .btn-gold     { background: var(--gold);    color: white; }
+  .btn-gold:hover { background: var(--gold-l); }
+  .btn-outline  { background: transparent; color: var(--green); border: 1.5px solid var(--green); }
+  .btn-outline:hover { background: var(--green); color: white; }
+  .btn-sm { padding: 6px 14px; font-size: .8em; }
+  /* ── RESULTS ── */
+  .results-header {
+    font-family: 'Arial', sans-serif;
+    font-size: .88em;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .results-header strong { color: var(--text); }
+  .article-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    transition: box-shadow .2s, border-color .2s;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 12px;
+  }
+  .article-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.16); border-color: var(--green); }
+  .card-title {
+    font-size: 1.05em;
+    font-weight: bold;
+    color: var(--green-d);
+    grid-column: 1;
+    line-height: 1.4;
+  }
+  .card-title a { color: inherit; text-decoration: none; }
+  .card-title a:hover { color: var(--green-l); text-decoration: underline; }
+  .card-title mark { background: #fff3a0; border-radius: 3px; padding: 0 2px; }
+  .card-meta {
+    font-family: 'Arial', sans-serif;
+    font-size: .78em;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 6px;
+    align-items: center;
+    grid-column: 1;
+  }
+  .badge {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: .75em;
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+  }
+  .badge-history    { background: #e8f4e8; color: #1a5c38; }
+  .badge-genealogy  { background: #fef0e0; color: #9a5500; }
+  .badge-archaeology{ background: #e8e4f4; color: #42307c; }
+  .badge-general    { background: #e4f0f8; color: #1a4a78; }
+  .badge-academic   { background: #f4e8e8; color: #7c1a1a; }
+  .badge-folklore   { background: #f0f4e8; color: #3a5c1a; }
+  .card-snippet {
+    font-size: .88em;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-top: 8px;
+    grid-column: 1;
+  }
+  .card-snippet mark { background: #fff3a0; border-radius: 3px; padding: 0 2px; }
+  .card-actions {
+    grid-column: 2;
+    grid-row: 1 / 4;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    justify-content: flex-start;
+    align-items: flex-end;
+    padding-top: 2px;
+  }
+  .score-badge {
+    background: var(--gold);
+    color: white;
+    font-family: 'Arial', sans-serif;
+    font-size: .75em;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 10px;
+  }
+  .archived-tag {
+    font-size: .72em;
+    color: var(--green);
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+  /* ── PAGINATION ── */
+  .pagination {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+  .page-btn {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-family: 'Arial', sans-serif;
+    font-size: .88em;
+    text-decoration: none;
+    color: var(--text);
+    background: var(--white);
+    transition: background .15s;
+  }
+  .page-btn:hover { background: var(--parch-d); }
+  .page-btn.active { background: var(--green); color: white; border-color: var(--green); font-weight: bold; }
+  .page-btn.disabled { opacity: .4; pointer-events: none; }
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--muted);
+    font-style: italic;
+    font-size: 1.05em;
+  }
+  .empty-state .icon { font-size: 3em; margin-bottom: 12px; }
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--green);
+    color: white;
+    padding: 14px 22px;
+    border-radius: 8px;
+    font-family: 'Arial', sans-serif;
+    font-size: .9em;
+    box-shadow: 0 4px 16px rgba(0,0,0,.25);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all .3s ease;
+    z-index: 999;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  /* ── NAV ── */
+  nav {
+    background: var(--green);
+    border-bottom: 3px solid var(--gold);
+    border-top: 1px solid rgba(255,255,255,.2);
+  }
+  nav .nav-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    gap: 0;
+  }
+  nav a {
+    color: var(--white);
+    text-decoration: none;
+    padding: 12px 20px;
+    font-size: 0.95em;
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    letter-spacing: 0.3px;
+    opacity: 0.85;
+    transition: opacity 0.2s, background 0.2s;
+  }
+  nav a:hover, nav a.active {
+    opacity: 1;
+    background: rgba(255,255,255,.15);
+  }
+  nav a.active { border-bottom: 3px solid var(--gold); }
+  /* ── RESPONSIVE ── */
+  @media (max-width: 860px) {
+    .main-wrap { grid-template-columns: 1fr; }
+    .sidebar { order: 2; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="header-crest">🏰</div>
+    <div class="header-text">
+      <h1>Carrigtwohill Historical Research Repository</h1>
+      <p>Systematic discovery &amp; archiving of records relating to Carrigtwohill, Co. Cork, Ireland</p>
+    </div>
+    <div class="header-actions">
+      <a href="/export/csv" class="btn btn-outline btn-sm">⬇ Export CSV</a>
+      <button onclick="triggerCollect()" class="btn btn-gold btn-sm">🔄 Run Collector</button>
+    </div>
+  </div>
+  <!-- stats ribbon -->
+  <div class="stats-ribbon">
+    <div class="stats-ribbon-inner">
+      <div class="stat-chip">📄 <strong>{{ stats.total }}</strong> articles</div>
+      <div class="stat-chip">👤 <strong>{{ stats.persons }}</strong> notable persons</div>
+      <div class="stat-chip">📁 <strong>{{ stats.archived }}</strong> archived copies</div>
+      <div class="stat-chip">🕐 Last collected: <strong>{{ stats.last_run[:16] if stats.last_run != 'Never' else 'Not yet' }}</strong></div>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="active">Articles</a>
+    <a href="/persons">Notable Persons</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main-wrap">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- FILTERS -->
+    <div class="panel">
+      <div class="panel-head">🔽 Filter Results</div>
+      <div class="panel-body">
+        <form method="get" action="/" id="filter-form">
+          <input type="hidden" name="q" id="q-hidden" value="{{ query }}">
+          <div class="filter-group">
+            <label>Category</label>
+            <select name="cat" onchange="this.form.submit()">
+              <option value="all" {% if category=='all' %}selected{% endif %}>All categories</option>
+              {% for c in categories %}
+              <option value="{{ c }}" {% if category==c %}selected{% endif %}>{{ c|title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Source Type</label>
+            <select name="type" onchange="this.form.submit()">
+              <option value="all" {% if src_type=='all' %}selected{% endif %}>All types</option>
+              {% for t in source_types %}
+              <option value="{{ t }}" {% if src_type==t %}selected{% endif %}>{{ t|title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- SOURCES BREAKDOWN -->
+    <div class="panel">
+      <div class="panel-head">📚 By Source</div>
+      <div class="panel-body">
+        {% if stats.sources %}
+        <ul class="source-list">
+          {% for s in stats.sources %}
+          <li>
+            <a href="/?q=&src={{ s.source|urlencode }}" class="src-name" style="color:var(--green);text-decoration:none;" title="Filter by {{ s.source }}">{{ s.source[:32] }}</a>
+            <span class="src-count">{{ s.n }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p style="font-size:.85em;color:var(--muted);font-style:italic">
+          No articles yet — click <strong>Run Collector</strong> above.
+        </p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- QUICK LINKS -->
+    <div class="panel">
+      <div class="panel-head">🔗 Key Resources</div>
+      <div class="panel-body" style="font-size:.83em;line-height:1.9;">
+        <a href="https://www.irishgenealogy.ie" target="_blank" style="color:var(--green)">IrishGenealogy.ie</a><br>
+        <a href="https://www.duchas.ie/en/cbes" target="_blank" style="color:var(--green)">DÚCHás Folklore Collection</a><br>
+        <a href="https://www.ancestry.com" target="_blank" style="color:var(--green)">Ancestry.com</a><br>
+        <a href="https://www.findmypast.ie" target="_blank" style="color:var(--green)">FindMyPast Ireland</a><br>
+        <a href="https://www.archaeology.ie" target="_blank" style="color:var(--green)">National Monuments (Archaeology.ie)</a><br>
+        <a href="https://www.buildingsofireland.ie" target="_blank" style="color:var(--green)">Buildings of Ireland</a><br>
+        <a href="https://www.askaboutireland.ie" target="_blank" style="color:var(--green)">Ask About Ireland</a><br>
+        <a href="https://celt.ucc.ie" target="_blank" style="color:var(--green)">CELT – UCC Historical Texts</a><br>
+        <a href="https://www.irishnewsarchive.com" target="_blank" style="color:var(--green)">Irish News Archive ⭐</a><br>
+        <a href="https://www.corkhist.ie" target="_blank" style="color:var(--green)">Cork Historical Society</a>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- CONTENT -->
+  <main>
+
+    <!-- SEARCH BAR -->
+    <div class="search-area">
+      <form method="get" action="/" class="search-form" id="main-search">
+        <input
+          type="text"
+          name="q"
+          class="search-input"
+          placeholder="Search: castles, families, births, parishes, estates, notable persons…"
+          value="{{ query }}"
+          autocomplete="off"
+        >
+        <input type="hidden" name="cat"  value="{{ category }}">
+        <input type="hidden" name="type" value="{{ src_type }}">
+        <button type="submit" class="btn btn-primary">🔍 Search</button>
+        {% if query or category != 'all' or src_type != 'all' %}
+        <a href="/" class="btn btn-outline">✕ Clear</a>
+        {% endif %}
+      </form>
+    </div>
+
+    <!-- RESULTS HEADER -->
+    <div class="results-header">
+      <span>
+        {% if query %}
+          <strong>{{ total }}</strong> result{{ 's' if total != 1 }} for "<strong>{{ query }}</strong>"
+        {% else %}
+          Showing <strong>{{ ((page-1)*per_page)+1 }}–{{ [page*per_page, total]|min }}</strong>
+          of <strong>{{ total }}</strong> articles
+        {% endif %}
+        {% if category != 'all' %}
+          &nbsp;·&nbsp; Category: <strong>{{ category|title }}</strong>
+        {% endif %}
+        {% if src_type != 'all' %}
+          &nbsp;·&nbsp; Type: <strong>{{ src_type|title }}</strong>
+        {% endif %}
+      </span>
+      <span style="font-size:.8em;color:var(--muted)">
+        Page {{ page }} of {{ total_pages }}
+      </span>
+    </div>
+
+    <!-- ARTICLE CARDS -->
+    {% if articles %}
+      {% for a in articles %}
+      <div class="article-card">
+        <div class="card-title">
+          <a href="/article/{{ a.id }}">{{ a.title_hl|safe }}</a>
+        </div>
+        <div class="card-meta">
+          <span class="badge badge-{{ a.category|default('general') }}">{{ a.category|default('general')|title }}</span>
+          <span>📰 {{ a.source }}</span>
+          {% if a.date_pub %}
+          <span>📅 {{ a.date_pub[:10] if a.date_pub else '' }}</span>
+          {% endif %}
+          {% if a.author %}
+          <span>✍ {{ a.author[:40] }}</span>
+          {% endif %}
+          {% if a.url %}
+          <a href="{{ a.url }}" target="_blank" style="color:var(--green);text-decoration:none;font-size:.9em">🔗 Source</a>
+          {% endif %}
+        </div>
+        {% if a.snippet %}
+        <div class="card-snippet">{{ a.snippet|safe }}</div>
+        {% endif %}
+        <div class="card-actions">
+          {% if a.score and a.score > 0 %}
+          <span class="score-badge">★ {{ "%.1f"|format(a.score) }}</span>
+          {% endif %}
+          {% if a.archived %}
+          <span class="archived-tag">📄 Archived</span>
+          {% endif %}
+          <a href="/article/{{ a.id }}" class="btn btn-outline btn-sm">View</a>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <div class="icon">🔍</div>
+        {% if query %}
+          No results found for "<strong>{{ query }}</strong>". Try a broader term.
+        {% else %}
+          The repository is empty. Click <strong>Run Collector</strong> to begin discovery.
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <!-- PAGINATION -->
+    {% if total_pages > 1 %}
+    <div class="pagination">
+      <a href="?q={{ query }}&cat={{ category }}&type={{ src_type }}&page={{ [page-1,1]|max }}"
+         class="page-btn {{ 'disabled' if page==1 }}">‹</a>
+      {% for p in range([1,page-3]|max, [total_pages+1,page+4]|min) %}
+      <a href="?q={{ query }}&cat={{ category }}&type={{ src_type }}&page={{ p }}"
+         class="page-btn {{ 'active' if p==page }}">{{ p }}</a>
+      {% endfor %}
+      <a href="?q={{ query }}&cat={{ category }}&type={{ src_type }}&page={{ [page+1,total_pages]|min }}"
+         class="page-btn {{ 'disabled' if page==total_pages }}">›</a>
+    </div>
+    {% endif %}
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+function showToast(msg, duration=3500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+function triggerCollect() {
+  showToast('🔄 Collection started — running in background…', 5000);
+  fetch('/api/collect', {method:'POST'})
+    .then(r => r.json())
+    .then(d => {
+      setTimeout(() => location.reload(), 8000);
+    })
+    .catch(e => showToast('⚠ Error starting collector'));
+}
+
+// Keep hidden q field in sync when filter form submits
+document.getElementById('filter-form').addEventListener('submit', function() {
+  document.getElementById('q-hidden').value =
+    document.querySelector('.search-input').value;
+});
+</script>
+
+</body>
+</html>

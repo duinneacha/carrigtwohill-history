@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ article.title[:80] }} – Carrigtwohill Repository</title>
+<style>
+  :root {
+    --green:#1a5c38;--green-l:#2a7a4e;--green-d:#0f3a22;
+    --gold:#c8941a;--parch:#f7f3ec;--parch-d:#ede7d9;
+    --border:#d4c9b2;--text:#2c2416;--muted:#6b5e4a;
+  }
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Georgia',serif; background:var(--parch); color:var(--text); }
+  header { background:linear-gradient(135deg,var(--green-d),var(--green)); color:#fff; padding:16px 24px; box-shadow:0 3px 12px rgba(0,0,0,.3); }
+  header a { color:rgba(255,255,255,.8); text-decoration:none; font-family:'Arial',sans-serif; font-size:.9em; }
+  header a:hover { color:#fff; }
+  .wrap { max-width:860px; margin:32px auto; padding:0 24px; }
+  .article-head { background:#fff; border:1px solid var(--border); border-radius:10px; padding:28px 32px; margin-bottom:24px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+  .article-head h1 { font-size:1.55em; line-height:1.4; color:var(--green-d); margin-bottom:14px; }
+  .meta-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 24px; font-family:'Arial',sans-serif; font-size:.84em; }
+  .meta-row { display:flex; gap:6px; align-items:baseline; }
+  .meta-label { color:var(--muted); font-weight:bold; text-transform:uppercase; letter-spacing:.3px; font-size:.8em; min-width:70px; }
+  .meta-val { color:var(--text); }
+  .badge { display:inline-block; padding:3px 10px; border-radius:10px; font-size:.75em; font-weight:bold; text-transform:uppercase; }
+  .badge-history    { background:#e8f4e8; color:#1a5c38; }
+  .badge-genealogy  { background:#fef0e0; color:#9a5500; }
+  .badge-archaeology{ background:#e8e4f4; color:#42307c; }
+  .badge-general    { background:#e4f0f8; color:#1a4a78; }
+  .badge-academic   { background:#f4e8e8; color:#7c1a1a; }
+  .badge-folklore   { background:#f0f4e8; color:#3a5c1a; }
+  .source-link { display:inline-block; margin-top:16px; padding:8px 18px; background:var(--green); color:#fff; text-decoration:none; border-radius:6px; font-family:'Arial',sans-serif; font-size:.88em; }
+  .source-link:hover { background:var(--green-l); }
+  .content-panel { background:#fff; border:1px solid var(--border); border-radius:10px; padding:28px 32px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+  .content-panel h2 { font-size:1em; font-family:'Arial',sans-serif; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--parch-d); }
+  .article-body { font-size:.95em; line-height:1.8; color:var(--text); white-space:pre-wrap; word-break:break-word; max-height:600px; overflow-y:auto; padding-right:8px; }
+  .article-body::-webkit-scrollbar { width:6px; }
+  .article-body::-webkit-scrollbar-track { background:var(--parch-d); border-radius:3px; }
+  .article-body::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+  .no-content { color:var(--muted); font-style:italic; font-family:'Arial',sans-serif; font-size:.9em; }
+  .tags-row { margin-top:14px; display:flex; flex-wrap:wrap; gap:6px; }
+  .tag { background:var(--parch-d); color:var(--muted); padding:3px 10px; border-radius:10px; font-size:.78em; font-family:'Arial',sans-serif; }
+  .back-btn { display:inline-flex; align-items:center; gap:6px; margin-bottom:20px; color:var(--green); text-decoration:none; font-family:'Arial',sans-serif; font-size:.9em; }
+  .back-btn:hover { text-decoration:underline; }
+  nav { background:var(--green-d); border-bottom:3px solid var(--gold); }
+  nav .nav-inner { max-width:860px; margin:0 auto; padding:0 24px; display:flex; gap:0; }
+  nav a { color:#fff; text-decoration:none; padding:12px 20px; font-size:.95em; opacity:.8; transition:opacity .2s, background .2s; }
+  nav a:hover, nav a.active { opacity:1; background:rgba(255,255,255,.1); }
+  nav a.active { border-bottom:3px solid var(--gold); }
+</style>
+</head>
+<body>
+<header>
+  <a href="/">← Carrigtwohill Historical Research Repository</a>
+</header>
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="active">Articles</a>
+    <a href="/persons">Notable Persons</a>
+  </div>
+</nav>
+<div class="wrap">
+  <a href="/" class="back-btn">← Back to Search</a>
+
+  <div class="article-head">
+    <h1>{{ article.title }}</h1>
+    <div class="meta-grid">
+      <div class="meta-row">
+        <span class="meta-label">Source</span>
+        <span class="meta-val">{{ article.source }}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Type</span>
+        <span class="meta-val">
+          <span class="badge badge-{{ article.category|default('general') }}">{{ article.category|default('general')|title }}</span>
+        </span>
+      </div>
+      {% if article.author %}
+      <div class="meta-row">
+        <span class="meta-label">Author</span>
+        <span class="meta-val">{{ article.author }}</span>
+      </div>
+      {% endif %}
+      {% if article.date_pub %}
+      <div class="meta-row">
+        <span class="meta-label">Published</span>
+        <span class="meta-val">{{ article.date_pub }}</span>
+      </div>
+      {% endif %}
+      <div class="meta-row">
+        <span class="meta-label">Found</span>
+        <span class="meta-val">{{ article.date_found[:10] if article.date_found else '—' }}</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">Score</span>
+        <span class="meta-val">{{ "%.1f / 10.0"|format(article.score) if article.score else '—' }}</span>
+      </div>
+    </div>
+
+    {% if article.tags %}
+    <div class="tags-row">
+      {% for tag in article.tags %}
+      <span class="tag">{{ tag }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if article.url %}
+    <a href="{{ article.url }}" target="_blank" class="source-link">🔗 View Original Source</a>
+    {% endif %}
+  </div>
+
+  <div class="content-panel">
+    {% if archived_text %}
+    <h2>📄 Archived Full Text</h2>
+    <div class="article-body">{{ archived_text }}</div>
+    {% elif article.content %}
+    <h2>📝 Content</h2>
+    <div class="article-body">{{ article.content }}</div>
+    {% elif article.summary %}
+    <h2>📝 Summary</h2>
+    <div class="article-body">{{ article.summary }}</div>
+    {% else %}
+    <h2>📝 Content</h2>
+    <p class="no-content">
+      No archived text available. Click <strong>View Original Source</strong> above to read the full article.
+    </p>
+    {% endif %}
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ person.name }} — Carrigtwohill Notable Persons</title>
+<style>
+  :root {
+    --green:   #1a5c38;
+    --green-l: #2a7a4e;
+    --green-d: #0f3a22;
+    --gold:    #c8941a;
+    --gold-l:  #e8b030;
+    --parch:   #f7f3ec;
+    --parch-d: #ede7d9;
+    --border:  #d4c9b2;
+    --text:    #2c2416;
+    --muted:   #6b5e4a;
+    --white:   #ffffff;
+    --shadow:  0 2px 8px rgba(0,0,0,.12);
+    --tier1:   #8b0000;
+    --tier2:   #1a5c38;
+    --tier3:   #4a6741;
+    --conf-high:   #2a7a4e;
+    --conf-medium: #c8941a;
+    --conf-low:    #a0522d;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--parch);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(135deg, var(--green-d) 0%, var(--green) 60%, var(--green-l) 100%);
+    color: var(--white);
+    box-shadow: 0 3px 12px rgba(0,0,0,.3);
+  }
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 24px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .header-crest { font-size: 52px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.3)); }
+  .header-text h1 { font-size: 1.9em; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,.3); }
+  .header-text p { opacity: 0.9; margin-top: 4px; font-size: 1.05em; }
+
+  nav {
+    background: var(--green-d);
+    border-bottom: 3px solid var(--gold);
+  }
+  nav .nav-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    gap: 0;
+  }
+  nav a {
+    color: var(--white);
+    text-decoration: none;
+    padding: 12px 20px;
+    font-size: 0.95em;
+    opacity: 0.8;
+    transition: opacity 0.2s, background 0.2s;
+  }
+  nav a:hover, nav a.active { opacity: 1; background: rgba(255,255,255,.1); }
+  nav a.active { border-bottom: 3px solid var(--gold); }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 24px; }
+
+  /* ── BREADCRUMB ── */
+  .breadcrumb {
+    margin-bottom: 20px;
+    font-size: 0.9em;
+    color: var(--muted);
+  }
+  .breadcrumb a { color: var(--green); text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+
+  /* ── PROFILE HEADER ── */
+  .profile-header {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+  }
+  .profile-header h2 {
+    color: var(--green-d);
+    font-size: 1.8em;
+    margin-bottom: 6px;
+  }
+  .profile-header .subtitle {
+    font-size: 1.1em;
+    font-style: italic;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .profile-meta {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    font-size: 0.9em;
+    color: var(--muted);
+  }
+  .profile-meta .meta-item { display: flex; align-items: center; gap: 6px; }
+  .profile-meta .meta-label { font-weight: bold; color: var(--text); }
+
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+  }
+  .badge-tier1 { background: var(--tier1); color: var(--white); }
+  .badge-tier2 { background: var(--tier2); color: var(--white); }
+  .badge-tier3 { background: var(--tier3); color: var(--white); }
+  .badge-high   { background: #e8f5e9; color: var(--conf-high); border: 1px solid var(--conf-high); }
+  .badge-medium { background: #fff8e1; color: var(--conf-medium); border: 1px solid var(--conf-medium); }
+  .badge-low    { background: #fbe9e7; color: var(--conf-low); border: 1px solid var(--conf-low); }
+  .badge-cat { background: var(--parch-d); color: var(--muted); border: 1px solid var(--border); }
+  .badge-living { background: #e3f2fd; color: #1565c0; border: 1px solid #1565c0; }
+
+  /* ── SECTIONS ── */
+  .section {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .section h3 {
+    color: var(--green);
+    font-size: 1.15em;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--gold-l);
+  }
+  .section p { line-height: 1.7; margin-bottom: 8px; }
+
+  /* ── CONNECTION BOX ── */
+  .connection-box {
+    background: linear-gradient(135deg, #f0f7f2 0%, #e8f0e4 100%);
+    border-left: 4px solid var(--green);
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 12px;
+    line-height: 1.7;
+  }
+
+  /* ── SOURCES LIST ── */
+  .sources-list { list-style: none; padding: 0; }
+  .sources-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--parch-d);
+    font-size: 0.9em;
+  }
+  .sources-list li:last-child { border-bottom: none; }
+  .sources-list a {
+    color: var(--green);
+    text-decoration: none;
+    word-break: break-all;
+  }
+  .sources-list a:hover { text-decoration: underline; }
+  .source-role {
+    display: inline-block;
+    background: var(--parch-d);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    color: var(--muted);
+    margin-left: 8px;
+  }
+
+  /* ── EMIGRATION ── */
+  .emigration-path {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 0.95em;
+  }
+  .emigration-step {
+    background: var(--parch-d);
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+  .emigration-arrow { color: var(--gold); font-size: 1.4em; }
+
+  /* ── EXTERNAL LINKS ── */
+  .ext-links { display: flex; gap: 12px; flex-wrap: wrap; }
+  .ext-link {
+    display: inline-block;
+    padding: 8px 16px;
+    background: var(--green);
+    color: var(--white);
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.85em;
+    transition: background 0.2s;
+  }
+  .ext-link:hover { background: var(--green-l); }
+
+  /* ── AUDIT TABLE ── */
+  .audit-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85em;
+  }
+  .audit-table th {
+    text-align: left;
+    padding: 8px 12px;
+    background: var(--parch-d);
+    border-bottom: 2px solid var(--border);
+    color: var(--muted);
+  }
+  .audit-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--parch-d);
+  }
+
+  footer {
+    background: var(--green-d);
+    color: rgba(255,255,255,.7);
+    text-align: center;
+    padding: 20px;
+    margin-top: 40px;
+    font-size: 0.85em;
+  }
+  footer a { color: var(--gold-l); text-decoration: none; }
+
+  @media (max-width: 600px) {
+    .header-inner { flex-direction: column; text-align: center; }
+    .profile-meta { flex-direction: column; gap: 8px; }
+    .container { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-crest">&#x1F3F0;</div>
+    <div class="header-text">
+      <h1>Carrigtwohill Notable Persons</h1>
+      <p>Tracing the remarkable people connected to our parish</p>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/">Articles</a>
+    <a href="/persons" class="active">Notable Persons</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div class="breadcrumb">
+    <a href="/persons">Notable Persons</a> &rsaquo; {{ person.name }}
+  </div>
+
+  <!-- Profile Header -->
+  <div class="profile-header">
+    <h2>{{ person.name }}</h2>
+    {% if person.notable_for %}
+    <div class="subtitle">{{ person.notable_for }}</div>
+    {% endif %}
+
+    <div class="profile-meta">
+      {% if person.birth_year or person.death_year %}
+      <div class="meta-item">
+        <span class="meta-label">Dates:</span>
+        {{ person.birth_year or '?' }} &ndash; {{ person.death_year or 'present' }}
+      </div>
+      {% endif %}
+      {% if person.birth_location %}
+      <div class="meta-item">
+        <span class="meta-label">Born:</span> {{ person.birth_location }}
+      </div>
+      {% endif %}
+      {% if person.death_location %}
+      <div class="meta-item">
+        <span class="meta-label">Died:</span> {{ person.death_location }}
+      </div>
+      {% endif %}
+      {% if person.country_of_residence %}
+      <div class="meta-item">
+        <span class="meta-label">Country:</span> {{ person.country_of_residence }}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="badges">
+      <span class="badge badge-tier{{ person.tier }}">
+        {{ tier_labels.get(person.tier, 'Tier ' ~ person.tier) }}
+      </span>
+      <span class="badge badge-{{ person.confidence }}">
+        {{ person.confidence|capitalize }} confidence
+      </span>
+      <span class="badge badge-cat">{{ person.category|capitalize }}</span>
+      {% if person.category == 'living' or person.privacy_flag %}
+      <span class="badge badge-living">Living Person</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Connection to Carrigtwohill -->
+  <div class="section">
+    <h3>Connection to Carrigtwohill</h3>
+    <div class="connection-box">{{ person.connection }}</div>
+  </div>
+
+  <!-- Biography -->
+  {% if person.bio %}
+  <div class="section">
+    <h3>Biography</h3>
+    <p>{{ person.bio }}</p>
+  </div>
+  {% endif %}
+
+  <!-- Emigration Path (if applicable) -->
+  {% if person.emigration_destination %}
+  <div class="section">
+    <h3>Emigration Path</h3>
+    <div class="emigration-path">
+      <div class="emigration-step">
+        {{ person.birth_location or 'Carrigtwohill' }}
+      </div>
+      {% if person.emigration_route %}
+      <div class="emigration-arrow">&rarr;</div>
+      <div class="emigration-step">{{ person.emigration_route }}</div>
+      {% endif %}
+      <div class="emigration-arrow">&rarr;</div>
+      <div class="emigration-step">
+        {{ person.emigration_destination }}
+        {% if person.emigration_year %} ({{ person.emigration_year }}){% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Sources & Evidence -->
+  <div class="section">
+    <h3>Sources &amp; Evidence</h3>
+    {% if person.sources_list %}
+    <ul class="sources-list">
+      {% for src in person.sources_list %}
+      <li>
+        <a href="{{ src }}" target="_blank" rel="noopener">{{ src }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if linked_articles %}
+    <h4 style="margin-top: 16px; margin-bottom: 8px; color: var(--muted); font-size: 0.95em;">
+      Linked Articles in Repository
+    </h4>
+    <ul class="sources-list">
+      {% for art in linked_articles %}
+      <li>
+        <a href="/article/{{ art.id }}">{{ art.title }}</a>
+        <span class="source-role">{{ art.role }}</span>
+        <span style="color: var(--muted); font-size: 0.8em;"> &middot; {{ art.source }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if not person.sources_list and not linked_articles %}
+    <p style="color: var(--muted); font-style: italic;">No sources documented yet.</p>
+    {% endif %}
+  </div>
+
+  <!-- External Links -->
+  {% if person.wikipedia_url or person.wikidata_id %}
+  <div class="section">
+    <h3>External Links</h3>
+    <div class="ext-links">
+      {% if person.wikipedia_url %}
+      <a class="ext-link" href="{{ person.wikipedia_url }}" target="_blank" rel="noopener">
+        Wikipedia
+      </a>
+      {% endif %}
+      {% if person.wikidata_id %}
+      <a class="ext-link" href="https://www.wikidata.org/wiki/{{ person.wikidata_id }}" target="_blank" rel="noopener">
+        Wikidata ({{ person.wikidata_id }})
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Confidence & Verification -->
+  <div class="section">
+    <h3>Confidence &amp; Verification</h3>
+    <p>
+      This connection is rated as
+      <strong style="color: {{ confidence_colours.get(person.confidence, '#333') }}">
+        {{ person.confidence|upper }}
+      </strong>
+      confidence.
+    </p>
+    {% if person.verified_by %}
+    <p>Verified by <strong>{{ person.verified_by }}</strong>
+       {% if person.verified_date %} on {{ person.verified_date }}{% endif %}.
+    </p>
+    {% endif %}
+    <p style="color: var(--muted); font-size: 0.85em; margin-top: 8px;">
+      Added: {{ person.added[:10] if person.added else 'Unknown' }}
+      {% if person.last_modified %}
+      &middot; Last modified: {{ person.last_modified[:10] }}
+      {% endif %}
+    </p>
+
+    {% if audit_history %}
+    <h4 style="margin-top: 16px; margin-bottom: 8px; color: var(--muted); font-size: 0.95em;">
+      Review History
+    </h4>
+    <table class="audit-table">
+      <thead>
+        <tr><th>Date</th><th>Change</th><th>Reason</th><th>Reviewer</th></tr>
+      </thead>
+      <tbody>
+        {% for a in audit_history %}
+        <tr>
+          <td>{{ a.review_date[:10] if a.review_date else '' }}</td>
+          <td>{{ a.old_confidence }} &rarr; {{ a.new_confidence }}</td>
+          <td>{{ a.reason }}</td>
+          <td>{{ a.reviewer }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </div>
+
+  <!-- Notes -->
+  {% if person.notes %}
+  <div class="section">
+    <h3>Research Notes</h3>
+    <p>{{ person.notes }}</p>
+  </div>
+  {% endif %}
+
+</div>
+
+<footer>
+  <p>Carrigtwohill Historical Research Repository &middot; A community genealogy project</p>
+  <p><a href="/persons">&larr; Back to Notable Persons</a> &middot; <a href="/">Articles</a></p>
+</footer>
+
+</body>
+</html>

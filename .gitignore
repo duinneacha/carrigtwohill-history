@@ -1,0 +1,29 @@
+# Deploy subfolder (has its own repo)
+deploy/
+
+# Database
+data/carrigtwohill.db
+
+# Archives (potentially large)
+data/archives/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db

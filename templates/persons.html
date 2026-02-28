@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notable Persons — Carrigtwohill Historical Research</title>
+<style>
+  :root {
+    --green:   #1a5c38;
+    --green-l: #2a7a4e;
+    --green-d: #0f3a22;
+    --gold:    #c8941a;
+    --gold-l:  #e8b030;
+    --parch:   #f7f3ec;
+    --parch-d: #ede7d9;
+    --border:  #d4c9b2;
+    --text:    #2c2416;
+    --muted:   #6b5e4a;
+    --white:   #ffffff;
+    --shadow:  0 2px 8px rgba(0,0,0,.12);
+    --tier1:   #8b0000;
+    --tier2:   #1a5c38;
+    --tier3:   #4a6741;
+    --conf-high:   #2a7a4e;
+    --conf-medium: #c8941a;
+    --conf-low:    #a0522d;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--parch);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, var(--green-d) 0%, var(--green) 60%, var(--green-l) 100%);
+    color: var(--white);
+    box-shadow: 0 3px 12px rgba(0,0,0,.3);
+  }
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 24px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .header-crest { font-size: 52px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.3)); }
+  .header-text h1 { font-size: 1.9em; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,.3); }
+  .header-text p { opacity: 0.9; margin-top: 4px; font-size: 1.05em; }
+
+  /* ── NAV ── */
+  nav {
+    background: var(--green-d);
+    border-bottom: 3px solid var(--gold);
+  }
+  nav .nav-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    gap: 0;
+  }
+  nav a {
+    color: var(--white);
+    text-decoration: none;
+    padding: 12px 20px;
+    font-size: 0.95em;
+    opacity: 0.8;
+    transition: opacity 0.2s, background 0.2s;
+  }
+  nav a:hover, nav a.active {
+    opacity: 1;
+    background: rgba(255,255,255,.1);
+  }
+  nav a.active { border-bottom: 3px solid var(--gold); }
+
+  /* ── MAIN ── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+  /* ── INTRO ── */
+  .intro {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+  }
+  .intro h2 { color: var(--green); margin-bottom: 8px; font-size: 1.3em; }
+  .intro p { color: var(--muted); line-height: 1.6; }
+
+  /* ── STATS ROW ── */
+  .stats-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .stat-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    flex: 1;
+    min-width: 140px;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .stat-card .num { font-size: 2em; font-weight: bold; color: var(--green); }
+  .stat-card .label { color: var(--muted); font-size: 0.85em; margin-top: 4px; }
+
+  /* ── FILTERS ── */
+  .filters {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow);
+  }
+  .filters input[type="text"] {
+    flex: 1;
+    min-width: 200px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.95em;
+  }
+  .filters select {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: inherit;
+    background: var(--white);
+  }
+  .filters button {
+    padding: 8px 20px;
+    background: var(--green);
+    color: var(--white);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    font-weight: bold;
+  }
+  .filters button:hover { background: var(--green-l); }
+
+  /* ── PERSON CARDS ── */
+  .persons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .person-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    transition: transform 0.15s, box-shadow 0.15s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  .person-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,.18);
+  }
+  .person-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  .person-card h3 {
+    color: var(--green-d);
+    font-size: 1.15em;
+    margin: 0;
+    line-height: 1.3;
+  }
+  .person-card .dates {
+    color: var(--muted);
+    font-size: 0.85em;
+    margin-top: 2px;
+  }
+  .person-card .notable-for {
+    color: var(--text);
+    font-size: 0.9em;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    font-style: italic;
+  }
+  .person-card .connection {
+    color: var(--muted);
+    font-size: 0.85em;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .person-card .badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: bold;
+    letter-spacing: 0.3px;
+  }
+  .badge-tier1 { background: var(--tier1); color: var(--white); }
+  .badge-tier2 { background: var(--tier2); color: var(--white); }
+  .badge-tier3 { background: var(--tier3); color: var(--white); }
+  .badge-high   { background: #e8f5e9; color: var(--conf-high); border: 1px solid var(--conf-high); }
+  .badge-medium { background: #fff8e1; color: var(--conf-medium); border: 1px solid var(--conf-medium); }
+  .badge-low    { background: #fbe9e7; color: var(--conf-low); border: 1px solid var(--conf-low); }
+  .badge-cat {
+    background: var(--parch-d);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .badge-living {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #1565c0;
+  }
+
+  /* ── PAGINATION ── */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 24px 0;
+  }
+  .pagination a, .pagination span {
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    text-decoration: none;
+    color: var(--text);
+    background: var(--white);
+  }
+  .pagination .active { background: var(--green); color: var(--white); border-color: var(--green); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty-state .icon { font-size: 3em; margin-bottom: 16px; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--green-d);
+    color: rgba(255,255,255,.7);
+    text-align: center;
+    padding: 20px;
+    margin-top: 40px;
+    font-size: 0.85em;
+  }
+  footer a { color: var(--gold-l); text-decoration: none; }
+
+  @media (max-width: 600px) {
+    .header-inner { flex-direction: column; text-align: center; }
+    .header-crest { font-size: 40px; }
+    .persons-grid { grid-template-columns: 1fr; }
+    .filters { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-crest">&#x1F3F0;</div>
+    <div class="header-text">
+      <h1>Carrigtwohill Notable Persons</h1>
+      <p>Tracing the remarkable people connected to our parish</p>
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="nav-inner">
+    <a href="/">Articles</a>
+    <a href="/persons" class="active">Notable Persons</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- Intro -->
+  <div class="intro">
+    <h2>From Carrigtwohill to the World</h2>
+    <p>
+      This research project identifies notable individuals with documented connections
+      to Carrigtwohill, County Cork — from medieval founders and Gaelic poets to
+      All-Ireland hurling champions and community figures. Each entry is
+      evidence-based, with confidence levels reflecting the strength of the documented
+      connection to our parish.
+    </p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="num">{{ stats.total }}</div>
+      <div class="label">Notable Persons</div>
+    </div>
+    {% for t in stats.by_tier %}
+    <div class="stat-card">
+      <div class="num">{{ t.n }}</div>
+      <div class="label">{{ tier_labels.get(t.tier, 'Tier ' ~ t.tier) }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Filters -->
+  <form class="filters" method="GET" action="/persons">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search by name, biography, connection...">
+    <select name="tier">
+      <option value="">All Tiers</option>
+      <option value="1" {{ 'selected' if tier_filter == '1' }}>Tier 1 — International</option>
+      <option value="2" {{ 'selected' if tier_filter == '2' }}>Tier 2 — National</option>
+      <option value="3" {{ 'selected' if tier_filter == '3' }}>Tier 3 — Regional</option>
+    </select>
+    <select name="confidence">
+      <option value="">All Confidence</option>
+      <option value="high" {{ 'selected' if confidence_filter == 'high' }}>High</option>
+      <option value="medium" {{ 'selected' if confidence_filter == 'medium' }}>Medium</option>
+      <option value="low" {{ 'selected' if confidence_filter == 'low' }}>Low</option>
+    </select>
+    <select name="category">
+      <option value="all">All Categories</option>
+      <option value="native" {{ 'selected' if category_filter == 'native' }}>Native</option>
+      <option value="historical" {{ 'selected' if category_filter == 'historical' }}>Historical</option>
+      <option value="diaspora" {{ 'selected' if category_filter == 'diaspora' }}>Diaspora</option>
+      <option value="living" {{ 'selected' if category_filter == 'living' }}>Living</option>
+    </select>
+    <button type="submit">Search</button>
+  </form>
+
+  <!-- Results -->
+  {% if persons %}
+  <div class="persons-grid">
+    {% for p in persons %}
+    <a class="person-card" href="/person/{{ p.id }}">
+      <div class="card-header">
+        <div>
+          <h3>{{ p.name_hl|safe }}</h3>
+          <div class="dates">
+            {% if p.birth_year %}{{ p.birth_year }}{% endif %}
+            {% if p.birth_year or p.death_year %}&ndash;{% endif %}
+            {% if p.death_year %}{{ p.death_year }}{% endif %}
+            {% if p.birth_location %} &middot; {{ p.birth_location }}{% endif %}
+          </div>
+        </div>
+      </div>
+      {% if p.notable_for %}
+      <div class="notable-for">{{ p.notable_for }}</div>
+      {% endif %}
+      <div class="connection">{{ p.connection }}</div>
+      <div class="badges">
+        <span class="badge badge-tier{{ p.tier }}">Tier {{ p.tier }}</span>
+        <span class="badge badge-{{ p.confidence }}">{{ p.confidence|capitalize }} confidence</span>
+        <span class="badge badge-cat">{{ p.category|capitalize }}</span>
+        {% if p.category == 'living' %}
+        <span class="badge badge-living">Living Person</span>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if total_pages > 1 %}
+  <div class="pagination">
+    {% if page > 1 %}
+    <a href="?q={{ query }}&tier={{ tier_filter or '' }}&confidence={{ confidence_filter or '' }}&category={{ category_filter }}&page={{ page - 1 }}">&laquo; Prev</a>
+    {% endif %}
+    {% for p_num in range(1, total_pages + 1) %}
+      {% if p_num == page %}
+        <span class="active">{{ p_num }}</span>
+      {% else %}
+        <a href="?q={{ query }}&tier={{ tier_filter or '' }}&confidence={{ confidence_filter or '' }}&category={{ category_filter }}&page={{ p_num }}">{{ p_num }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if page < total_pages %}
+    <a href="?q={{ query }}&tier={{ tier_filter or '' }}&confidence={{ confidence_filter or '' }}&category={{ category_filter }}&page={{ page + 1 }}">Next &raquo;</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="empty-state">
+    <div class="icon">&#x1F50D;</div>
+    <p>No notable persons found matching your search.</p>
+    <p><a href="/persons">View all persons</a></p>
+  </div>
+  {% endif %}
+
+</div>
+
+<footer>
+  <p>Carrigtwohill Historical Research Repository &middot; A community genealogy project</p>
+  <p>Data is evidence-based. Confidence levels reflect source quality. <a href="/">Back to Articles</a></p>
+</footer>
+
+</body>
+</html>
