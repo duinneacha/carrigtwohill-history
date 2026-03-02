@@ -101,9 +101,17 @@ def _score_townland_specificity(person: dict) -> float:
                   person.get("birth_location", "")).lower()
 
     carrigtwohill_townlands = [
-        "ballyadam", "tullagreen", "terrysland", "castleredmond",
-        "knockraha", "leamlara", "barryscourt", "carrigtwohill",
-        "carrigtohill", "carrig", "woodstock",
+        "anngrove", "ballinbrittig", "ballyadam", "ballycurreen",
+        "ballyleary", "ballynabointra", "ballyregan",
+        "ballyrichard beg", "ballyrichard more", "barryscourt",
+        "brown island", "burgesland", "carnoo", "carrigane",
+        "carrigtwohill", "carrigtohill", "cloneen", "clyduff",
+        "curragh", "fahydorgan", "forest-town", "foresttown",
+        "garrancloyne", "garranes", "gortagousta", "gortnamucky",
+        "johnstown", "kilcurfin glebe", "labaun", "lackenbehy",
+        "longstown", "lysaghtstown", "poulaniska", "springhill",
+        "terry's-land", "terrysland", "tibbotstown", "tullagreen",
+        "water-rock", "waterrock", "woodstock",
     ]
 
     for t in carrigtwohill_townlands:

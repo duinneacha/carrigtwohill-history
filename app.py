@@ -262,6 +262,45 @@ def api_person(pid):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Interactive Historical Map Routes
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.route("/map")
+def map_page():
+    """Interactive historical map of Carrigtwohill parish."""
+    return render_template("map.html")
+
+
+@app.route("/api/map/townlands")
+def api_map_townlands():
+    """GeoJSON FeatureCollection of townland boundaries."""
+    return jsonify(db.get_townlands_geojson())
+
+
+@app.route("/api/map/pois")
+def api_map_pois():
+    """GeoJSON FeatureCollection of points of interest, optionally filtered."""
+    poi_type = request.args.get("type", None)
+    era = request.args.get("era", None)
+    return jsonify(db.get_pois(poi_type=poi_type, era=era))
+
+
+@app.route("/api/map/poi/<int:pid>")
+def api_map_poi(pid):
+    """Single POI detail with linked articles and persons."""
+    poi = db.get_poi(pid)
+    return jsonify(poi) if poi else (jsonify({"error": "not found"}), 404)
+
+
+@app.route("/api/map/whatwashere")
+def api_map_whatwashere():
+    """Townland info + POIs + persons for a clicked location."""
+    townland = request.args.get("townland", "")
+    era = request.args.get("era", None)
+    return jsonify(db.get_whatwashere(townland=townland, era=era))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Scheduler
 # ─────────────────────────────────────────────────────────────────────────────
 

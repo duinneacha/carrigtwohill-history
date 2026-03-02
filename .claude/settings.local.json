@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:www.townlands.ie)",
+      "WebFetch(domain:www.logainm.ie)",
+      "Bash(python:*)",
+      "Bash(PYTHONIOENCODING=utf-8 python:*)",
+      "WebFetch(domain:maps.nls.uk)",
+      "WebFetch(domain:wiki.openstreetmap.org)",
+      "WebFetch(domain:utility.arcgis.com)",
+      "Bash(node:*)",
+      "WebFetch(domain:docs.gaois.ie)",
+      "WebFetch(domain:api.core.ac.uk)",
+      "Bash(pip install:*)"
+    ]
+  }
+}

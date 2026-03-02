@@ -550,10 +550,16 @@ class CoreAPICollector:
     Aggregates open-access papers from 10,000+ repositories including
     NUI Galway, UCC, Mary Immaculate College, UCD, and 200+ Irish
     institutional repositories. Finds theses and papers on Carrigtwohill.
+
+    v2: retry with exponential backoff for 500s, pagination (2 pages),
+        downloadUrl fallback chain, CORE-specific rate-limit delay.
     """
     NAME = "CORE (Open Research Publications)"
     API  = "https://api.core.ac.uk/v3/search/works"
-    KEY  = ""   # Register free at https://core.ac.uk/services/api to get a key
+    KEY  = os.environ.get("CORE_API_KEY", "")
+    PAGE_SIZE  = 15
+    MAX_PAGES  = 2
+    CORE_DELAY = 3.0   # CORE allows 25 req/min → 2.4s minimum; use 3s
 
     QUERIES = [
         "Carrigtwohill County Cork",
@@ -562,45 +568,131 @@ class CoreAPICollector:
         "County Cork archaeological survey",
     ]
 
+    def _core_request(self, params):
+        """GET with retry + exponential backoff for 5xx / timeout."""
+        headers = {**HEADERS, "Authorization": f"Bearer {self.KEY}"}
+        max_retries = 2
+        for attempt in range(max_retries + 1):
+            try:
+                r = requests.get(self.API, params=params,
+                                 headers=headers, timeout=30)
+                if r.status_code == 429:
+                    wait = float(r.headers.get("X-RateLimit-Retry-After", 5))
+                    log.warning(f"{self.NAME}: 429 rate-limited, sleeping {wait}s")
+                    time.sleep(wait)
+                    continue
+                if r.status_code >= 500 and attempt < max_retries:
+                    backoff = 3 * (2 ** attempt)
+                    log.warning(f"{self.NAME}: {r.status_code} on attempt "
+                                f"{attempt+1}, retrying in {backoff}s")
+                    time.sleep(backoff)
+                    continue
+                r.raise_for_status()
+                return r
+            except (requests.exceptions.Timeout,
+                    requests.exceptions.ConnectionError) as e:
+                if attempt < max_retries:
+                    backoff = 3 * (2 ** attempt)
+                    log.warning(f"{self.NAME}: {e}, retrying in {backoff}s")
+                    time.sleep(backoff)
+                else:
+                    log.warning(f"{self.NAME}: {e} (exhausted retries)")
+            except Exception as e:
+                log.warning(f"{self.NAME}: {e}")
+                break
+        return None
+
+    @staticmethod
+    def _best_url(work):
+        """Pick the most reliable URL from a CORE work record."""
+        if work.get("downloadUrl"):
+            return work["downloadUrl"]
+        src_urls = work.get("sourceFulltextUrls") or []
+        if src_urls:
+            return src_urls[0]
+        links = work.get("links") or []
+        if links and isinstance(links[0], dict) and links[0].get("url"):
+            return links[0]["url"]
+        work_id = work.get("id")
+        if work_id:
+            return f"https://core.ac.uk/works/{work_id}"
+        return "https://core.ac.uk"
+
+    @staticmethod
+    def _best_date(work):
+        """Extract the best available date string."""
+        d = work.get("publishedDate") or ""
+        if d:
+            return str(d)
+        y = work.get("yearPublished")
+        if y:
+            return str(y)
+        return ""
+
     def collect(self):
         if not self.KEY:
-            log.info(f"{self.NAME}: No API key set – skipping (register at core.ac.uk)")
+            log.info(f"{self.NAME}: No API key set – skipping "
+                     "(register at core.ac.uk)")
             return 0
         total_new = 0
         for q in self.QUERIES:
-            r = _get(self.API,
-                     params={"q": q, "limit": 15},
-                     extra_headers={"Authorization": f"Bearer {self.KEY}"})
-            if not r:
-                time.sleep(DELAY)
-                continue
-            results = r.json().get("results") or []
             found, new = 0, 0
-            for work in results:
-                title = work.get("title") or "CORE Record"
-                abstract = work.get("abstract") or ""
-                url = (work.get("links") or [{}])[0].get("url") or "https://core.ac.uk"
-                article = {
-                    "title": title[:300],
-                    "url": url,
-                    "content": abstract[:5000],
-                    "summary": abstract[:400],
-                    "source": self.NAME,
-                    "source_type": "academic",
-                    "category": "history",
-                    "date_published": str(work.get("publishedDate") or ""),
-                    "author": ", ".join((work.get("authors") or [])[:3]),
-                    "tags": json.dumps(["core", "open-access", "repository", "academic"]),
-                    "relevance_score": _relevance(title + " " + abstract),
-                    "notes": _ai_meta("tier1_global", self.NAME),
-                }
-                is_new, _ = db.insert_article(article)
-                found += 1
-                if is_new:
-                    new += 1; total_new += 1
-                time.sleep(DELAY * 0.3)
-            db.log_run(self.NAME, q, found, new)
-            time.sleep(DELAY)
+            all_pages_failed = True
+            for page in range(self.MAX_PAGES):
+                offset = page * self.PAGE_SIZE
+                r = self._core_request(
+                    {"q": q, "limit": self.PAGE_SIZE, "offset": offset})
+                if not r:
+                    time.sleep(self.CORE_DELAY)
+                    continue
+                all_pages_failed = False
+                body = r.json()
+                results = body.get("results") or body.get("data") or []
+                if not results:
+                    break  # no more results for this query
+                for work in results:
+                    title = work.get("title") or "CORE Record"
+                    abstract = work.get("abstract") or ""
+                    url = self._best_url(work)
+                    extra_meta = {}
+                    if work.get("id"):
+                        extra_meta["core_id"] = work["id"]
+                    if work.get("doi"):
+                        extra_meta["doi"] = work["doi"]
+                    if work.get("documentType"):
+                        extra_meta["documentType"] = work["documentType"]
+                    article = {
+                        "title": title[:300],
+                        "url": url,
+                        "content": abstract[:5000],
+                        "summary": abstract[:400],
+                        "source": self.NAME,
+                        "source_type": "academic",
+                        "category": "history",
+                        "date_published": self._best_date(work),
+                        "author": ", ".join(
+                            a.get("name", "") if isinstance(a, dict)
+                            else str(a)
+                            for a in (work.get("authors") or [])[:3]
+                        ),
+                        "tags": json.dumps(
+                            ["core", "open-access", "repository", "academic"]),
+                        "relevance_score": _relevance(title + " " + abstract),
+                        "notes": _ai_meta("tier1_global", self.NAME,
+                                          extra_meta if extra_meta else None),
+                    }
+                    is_new, _ = db.insert_article(article)
+                    found += 1
+                    if is_new:
+                        new += 1
+                        total_new += 1
+                    time.sleep(DELAY * 0.3)
+                time.sleep(self.CORE_DELAY)
+            if all_pages_failed:
+                db.log_run(self.NAME, q, found, new,
+                           error=f"All pages failed for query: {q}")
+            else:
+                db.log_run(self.NAME, q, found, new)
         return total_new
 
 

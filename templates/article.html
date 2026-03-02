@@ -31,6 +31,11 @@
   .badge-folklore   { background:#f0f4e8; color:#3a5c1a; }
   .source-link { display:inline-block; margin-top:16px; padding:8px 18px; background:var(--green); color:#fff; text-decoration:none; border-radius:6px; font-family:'Arial',sans-serif; font-size:.88em; }
   .source-link:hover { background:var(--green-l); }
+  .source-link-restricted { background:#c8941a; }
+  .source-link-restricted:hover { background:#e8b030; }
+  .source-link-unavailable { background:#888; cursor:default; }
+  .link-note { margin-top:8px; font-family:'Arial',sans-serif; font-size:.82em; color:var(--muted); font-style:italic; line-height:1.5; }
+  .url-text { font-family:'Arial',sans-serif; font-size:.82em; color:var(--muted); margin-top:16px; word-break:break-all; }
   .content-panel { background:#fff; border:1px solid var(--border); border-radius:10px; padding:28px 32px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
   .content-panel h2 { font-size:1em; font-family:'Arial',sans-serif; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--parch-d); }
   .article-body { font-size:.95em; line-height:1.8; color:var(--text); white-space:pre-wrap; word-break:break-word; max-height:600px; overflow-y:auto; padding-right:8px; }
@@ -57,6 +62,7 @@
   <div class="nav-inner">
     <a href="/" class="active">Articles</a>
     <a href="/persons">Notable Persons</a>
+    <a href="/map">Historical Map</a>
   </div>
 </nav>
 <div class="wrap">
@@ -106,7 +112,16 @@
     {% endif %}
 
     {% if article.url %}
+      {% if article.link_status == 'access_restricted' %}
+    <a href="{{ article.url }}" target="_blank" class="source-link source-link-restricted">🔒 Own Access Required</a>
+    <div class="link-note">This source may require institutional login or subscription access.</div>
+      {% elif article.link_status == 'unavailable' %}
+    <span class="source-link source-link-unavailable">⚠ Source Unavailable</span>
+    <div class="link-note">This source could not be reached. The article details below are preserved for reference.</div>
+    <div class="url-text">URL: {{ article.url }}</div>
+      {% else %}
     <a href="{{ article.url }}" target="_blank" class="source-link">🔗 View Original Source</a>
+      {% endif %}
     {% endif %}
   </div>
 

@@ -63,6 +63,15 @@ try:
 except ImportError:
     HAS_TRAFILATURA = False
 
+# Load .env file from same directory if present
+_env_path = Path(__file__).parent / ".env"
+if _env_path.exists():
+    for _line in _env_path.read_text().splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith("#") and "=" in _line:
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
+
 import db
 from new_collectors import NEW_COLLECTORS
 
@@ -327,19 +336,24 @@ class OpenLibraryCollector:
 class DuchasCollector:
     """
     Searches the DÚCHás API for folklore stories from Cork that mention
-    Carrigtwohill. The Schools Collection API is public.
+    Carrigtwohill. Requires a Gaois API key (apiKey query parameter).
     """
     NAME    = "DÚCHás (Irish Folklore Commission)"
     API     = "https://www.duchas.ie/api/v0.6/cbes"
     DETAIL  = "https://www.duchas.ie/en/cbes/story/{}"
 
     def collect(self):
+        api_key = os.environ.get("GAOIS_API_KEY", "")
+        if not api_key:
+            log.warning(f"{self.NAME}: No GAOIS_API_KEY in .env — skipping.")
+            return 0
         total_new = 0
         # Fetch Cork entries and filter by content
         page = 1
         while page <= 5:   # max 5 pages to avoid hammering
             r = _get(self.API, params={
-                "County": "Cork", "Page": page, "PerPage": 50
+                "County": "Cork", "Page": page, "PerPage": 50,
+                "apiKey": api_key,
             })
             if not r:
                 break
@@ -395,32 +409,54 @@ class DuchasCollector:
 # ─────────────────────────────────────────────────────────────────────────────
 
 class LogainmCollector:
-    """Fetches official placename data for Carrigtwohill and related townlands."""
+    """Fetches official placename data for Carrigtwohill and related townlands.
+    Requires a Gaois API key (apiKey query parameter).
+    Docs: https://docs.gaois.ie/en/data/logainm/v1.0/api"""
     NAME   = "Logainm (Irish Placenames Database)"
-    API    = "https://www.logainm.ie/api/v1.0/search"
+    API    = "https://www.logainm.ie/api/v1.0/"
 
     def collect(self):
+        api_key = os.environ.get("GAOIS_API_KEY", "")
+        if not api_key:
+            log.warning(f"{self.NAME}: No GAOIS_API_KEY in .env — skipping.")
+            return 0
         total_new = 0
         for term in ["Carrigtwohill", "Carraig Thuathail"]:
-            r = _get(self.API, params={"query": term, "lang": "en"})
+            r = _get(self.API, params={"Query": term, "apiKey": api_key}, timeout=30)
             if not r:
                 continue
             try:
-                items = r.json()
-                if isinstance(items, dict):
-                    items = items.get("features") or items.get("results") or [items]
+                data = r.json()
+                # v1.0 returns a list of place objects directly
+                if isinstance(data, list):
+                    items = data
+                elif isinstance(data, dict):
+                    items = data.get("results") or data.get("features") or [data]
+                else:
+                    items = []
             except Exception:
                 continue
 
             found, new = 0, 0
-            for item in (items if isinstance(items, list) else []):
-                props = item.get("properties") or item
-                name_en = props.get("NameEN") or props.get("GaeltachtNameEN") or str(props)
-                name_ga = props.get("NameGA") or ""
-                content = json.dumps(props, ensure_ascii=False)
+            for item in items:
+                # v1.0 response: placenames are in a nested array
+                placenames = item.get("placenames") or []
+                name_en = ""
+                name_ga = ""
+                for pn in placenames:
+                    wording = pn.get("wording", "")
+                    lang = pn.get("language", "")
+                    if lang == "en" and not name_en:
+                        name_en = wording
+                    elif lang == "ga" and not name_ga:
+                        name_ga = wording
+                if not name_en:
+                    name_en = str(item.get("id", "Unknown"))
+                place_id = item.get("id") or ""
+                content = json.dumps(item, ensure_ascii=False)
                 article = {
                     "title": f"Logainm: {name_en}" + (f" / {name_ga}" if name_ga else ""),
-                    "url": "https://www.logainm.ie/en/" + str(props.get("ID") or ""),
+                    "url": "https://www.logainm.ie/en/" + str(place_id),
                     "content": content,
                     "summary": f"Irish placename record for {name_en}. Irish form: {name_ga}.",
                     "source": self.NAME,

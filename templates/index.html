@@ -257,6 +257,8 @@
   .badge-general    { background: #e4f0f8; color: #1a4a78; }
   .badge-academic   { background: #f4e8e8; color: #7c1a1a; }
   .badge-folklore   { background: #f0f4e8; color: #3a5c1a; }
+  .badge-restricted  { background: #fef0e0; color: #9a5500; }
+  .badge-unavailable { background: #e8e8e8; color: #666; }
   .card-snippet {
     font-size: .88em;
     color: var(--muted);
@@ -411,6 +413,7 @@
   <div class="nav-inner">
     <a href="/" class="active">Articles</a>
     <a href="/persons">Notable Persons</a>
+    <a href="/map">Historical Map</a>
   </div>
 </nav>
 
@@ -550,6 +553,11 @@
           {% endif %}
           {% if a.url %}
           <a href="{{ a.url }}" target="_blank" style="color:var(--green);text-decoration:none;font-size:.9em">🔗 Source</a>
+          {% endif %}
+          {% if a.link_status == 'access_restricted' %}
+          <span class="badge badge-restricted">Own Access Required</span>
+          {% elif a.link_status == 'unavailable' %}
+          <span class="badge badge-unavailable">Source Unavailable</span>
           {% endif %}
         </div>
         {% if a.snippet %}

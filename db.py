@@ -5,6 +5,8 @@ SQLite + FTS5 full-text search engine
 v1.0 — Articles, collection log, FTS for articles
 v2.0 — Notable Persons system: extended persons table, person_sources,
         confidence_audit, families, persons_fts
+v3.0 — Interactive Historical Map: locations, pois, poi_links,
+        townland_boundaries, geo columns on persons
 """
 
 import sqlite3
@@ -189,6 +191,97 @@ END;
 """
 
 
+# ── Interactive Map Schema (v3.0) ─────────────────────────────────────────
+
+MAP_SCHEMA = """
+CREATE TABLE IF NOT EXISTS locations (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    name          TEXT NOT NULL,
+    name_irish    TEXT DEFAULT '',
+    location_type TEXT DEFAULT 'townland',
+    lat           REAL NOT NULL,
+    lng           REAL NOT NULL,
+    logainm_id    TEXT DEFAULT '',
+    osm_id        TEXT DEFAULT '',
+    notes         TEXT DEFAULT '',
+    UNIQUE(name, location_type)
+);
+
+CREATE TABLE IF NOT EXISTS pois (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    poi_type    TEXT DEFAULT 'site',
+    lat         REAL NOT NULL,
+    lng         REAL NOT NULL,
+    era_start   INTEGER DEFAULT NULL,
+    era_end     INTEGER DEFAULT NULL,
+    era_label   TEXT DEFAULT '',
+    townland    TEXT DEFAULT '',
+    image_url   TEXT DEFAULT '',
+    source_url  TEXT DEFAULT '',
+    added       TEXT DEFAULT (strftime('%Y-%m-%dT%H:%M:%S','now'))
+);
+
+CREATE TABLE IF NOT EXISTS poi_links (
+    poi_id       INTEGER NOT NULL,
+    entity_type  TEXT NOT NULL,
+    entity_id    INTEGER NOT NULL,
+    relationship TEXT DEFAULT '',
+    PRIMARY KEY (poi_id, entity_type, entity_id),
+    FOREIGN KEY (poi_id) REFERENCES pois(id)
+);
+
+CREATE TABLE IF NOT EXISTS townland_boundaries (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    name          TEXT NOT NULL UNIQUE,
+    name_irish    TEXT DEFAULT '',
+    area_acres    REAL DEFAULT 0,
+    county        TEXT DEFAULT 'Cork',
+    barony        TEXT DEFAULT 'Barrymore',
+    parish        TEXT DEFAULT 'Carrigtwohill',
+    geometry_json TEXT NOT NULL,
+    centroid_lat  REAL DEFAULT 0,
+    centroid_lng  REAL DEFAULT 0,
+    logainm_id    TEXT DEFAULT ''
+);
+"""
+
+
+def _migrate_articles_link_status(conn):
+    """Add link_status and link_checked_at columns to articles if not present."""
+    cols = [r[1] for r in conn.execute("PRAGMA table_info(articles)").fetchall()]
+    link_cols = [
+        ("link_status", "TEXT DEFAULT 'unchecked'"),
+        ("link_checked_at", "TEXT DEFAULT ''"),
+    ]
+    added = 0
+    for col_name, col_type in link_cols:
+        if col_name not in cols:
+            conn.execute(f"ALTER TABLE articles ADD COLUMN {col_name} {col_type}")
+            added += 1
+    if added:
+        print(f"  ↳ Added {added} link-status columns to articles table")
+
+
+def _migrate_map_tables(conn):
+    """Add geo columns to persons table if not present."""
+    cols = [r[1] for r in conn.execute("PRAGMA table_info(persons)").fetchall()]
+    geo_cols = [
+        ("birth_lat", "REAL DEFAULT NULL"),
+        ("birth_lng", "REAL DEFAULT NULL"),
+        ("death_lat", "REAL DEFAULT NULL"),
+        ("death_lng", "REAL DEFAULT NULL"),
+    ]
+    added = 0
+    for col_name, col_type in geo_cols:
+        if col_name not in cols:
+            conn.execute(f"ALTER TABLE persons ADD COLUMN {col_name} {col_type}")
+            added += 1
+    if added:
+        print(f"  ↳ Added {added} geo columns to persons table")
+
+
 def _migrate_persons_table(conn):
     """
     Migrate old persons table (v1) to new schema (v2) if needed.
@@ -247,6 +340,10 @@ def init_db():
     _migrate_persons_table(conn)
     # v2 schema (persons, person_sources, confidence_audit, families, persons_fts)
     conn.executescript(PERSONS_SCHEMA)
+    # v3 schema (locations, pois, poi_links, townland_boundaries)
+    conn.executescript(MAP_SCHEMA)
+    _migrate_map_tables(conn)
+    _migrate_articles_link_status(conn)
     conn.commit()
     conn.close()
     os.makedirs(ARCHIVE_DIR, exist_ok=True)
@@ -639,3 +736,327 @@ def get_persons_stats():
     ).fetchall()]
     conn.close()
     return s
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Interactive Map — Write
+# ─────────────────────────────────────────────────────────────────────────────
+
+def insert_poi(data: dict) -> tuple:
+    """Insert a POI. Returns (is_new: bool, row_id: int)."""
+    conn = get_conn()
+    try:
+        existing = conn.execute(
+            "SELECT id FROM pois WHERE name = ? AND lat = ? AND lng = ?",
+            (data.get("name", ""), data.get("lat", 0), data.get("lng", 0)),
+        ).fetchone()
+        if existing:
+            return False, existing[0]
+
+        cur = conn.execute(
+            """INSERT INTO pois
+               (name, description, poi_type, lat, lng,
+                era_start, era_end, era_label, townland,
+                image_url, source_url)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                data.get("name", ""),
+                data.get("description", ""),
+                data.get("poi_type", "site"),
+                float(data.get("lat", 0)),
+                float(data.get("lng", 0)),
+                data.get("era_start"),
+                data.get("era_end"),
+                data.get("era_label", ""),
+                data.get("townland", ""),
+                data.get("image_url", ""),
+                data.get("source_url", ""),
+            ),
+        )
+        conn.commit()
+        return True, cur.lastrowid
+    except Exception as e:
+        print(f"POI insert error: {e}")
+        return False, 0
+    finally:
+        conn.close()
+
+
+def insert_location(data: dict) -> tuple:
+    """Insert a location reference. Returns (is_new: bool, row_id: int)."""
+    conn = get_conn()
+    try:
+        cur = conn.execute(
+            """INSERT OR IGNORE INTO locations
+               (name, name_irish, location_type, lat, lng, logainm_id, osm_id, notes)
+               VALUES (?,?,?,?,?,?,?,?)""",
+            (
+                data.get("name", ""),
+                data.get("name_irish", ""),
+                data.get("location_type", "townland"),
+                float(data.get("lat", 0)),
+                float(data.get("lng", 0)),
+                data.get("logainm_id", ""),
+                data.get("osm_id", ""),
+                data.get("notes", ""),
+            ),
+        )
+        conn.commit()
+        return cur.rowcount > 0, cur.lastrowid
+    except Exception as e:
+        print(f"Location insert error: {e}")
+        return False, 0
+    finally:
+        conn.close()
+
+
+def insert_townland_boundary(data: dict) -> tuple:
+    """Insert a townland boundary. Returns (is_new: bool, row_id: int)."""
+    conn = get_conn()
+    try:
+        cur = conn.execute(
+            """INSERT OR IGNORE INTO townland_boundaries
+               (name, name_irish, area_acres, county, barony, parish,
+                geometry_json, centroid_lat, centroid_lng, logainm_id)
+               VALUES (?,?,?,?,?,?,?,?,?,?)""",
+            (
+                data.get("name", ""),
+                data.get("name_irish", ""),
+                float(data.get("area_acres", 0)),
+                data.get("county", "Cork"),
+                data.get("barony", "Barrymore"),
+                data.get("parish", "Carrigtwohill"),
+                data.get("geometry_json", "{}"),
+                float(data.get("centroid_lat", 0)),
+                float(data.get("centroid_lng", 0)),
+                data.get("logainm_id", ""),
+            ),
+        )
+        conn.commit()
+        return cur.rowcount > 0, cur.lastrowid
+    except Exception as e:
+        print(f"Townland boundary insert error: {e}")
+        return False, 0
+    finally:
+        conn.close()
+
+
+def link_poi(poi_id: int, entity_type: str, entity_id: int,
+             relationship: str = ""):
+    """Link a POI to an article or person."""
+    conn = get_conn()
+    try:
+        conn.execute(
+            "INSERT OR IGNORE INTO poi_links (poi_id, entity_type, entity_id, relationship) VALUES (?,?,?,?)",
+            (poi_id, entity_type, entity_id, relationship),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Interactive Map — Read
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_townlands_geojson():
+    """Return all townland boundaries as a GeoJSON FeatureCollection."""
+    conn = get_conn()
+    rows = conn.execute(
+        """SELECT name, name_irish, area_acres, county, barony, parish,
+                  geometry_json, centroid_lat, centroid_lng, logainm_id
+           FROM townland_boundaries ORDER BY name"""
+    ).fetchall()
+    conn.close()
+
+    features = []
+    for r in rows:
+        r = dict(r)
+        try:
+            geometry = json.loads(r["geometry_json"])
+        except (json.JSONDecodeError, TypeError):
+            continue
+        features.append({
+            "type": "Feature",
+            "geometry": geometry,
+            "properties": {
+                "name": r["name"],
+                "name_irish": r["name_irish"],
+                "area_acres": r["area_acres"],
+                "county": r["county"],
+                "barony": r["barony"],
+                "parish": r["parish"],
+                "centroid_lat": r["centroid_lat"],
+                "centroid_lng": r["centroid_lng"],
+                "logainm_id": r["logainm_id"],
+            },
+        })
+
+    return {"type": "FeatureCollection", "features": features}
+
+
+def get_pois(poi_type=None, era=None):
+    """Return POIs as a GeoJSON FeatureCollection, optionally filtered."""
+    conn = get_conn()
+    sql = "SELECT * FROM pois WHERE 1=1"
+    params = []
+
+    if poi_type:
+        sql += " AND poi_type = ?"
+        params.append(poi_type)
+
+    if era:
+        era_ranges = {
+            "norman":   (1177, 1350),
+            "medieval": (1350, 1600),
+            "tudor":    (1500, 1650),
+            "famine":   (1845, 1852),
+            "modern":   (1900, 2100),
+        }
+        if era.lower() in era_ranges:
+            start, end = era_ranges[era.lower()]
+            sql += " AND (era_start IS NULL OR era_start <= ?) AND (era_end IS NULL OR era_end >= ?)"
+            params.append(end)
+            params.append(start)
+
+    sql += " ORDER BY name"
+    rows = conn.execute(sql, params).fetchall()
+    conn.close()
+
+    features = []
+    for r in rows:
+        r = dict(r)
+        features.append({
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [r["lng"], r["lat"]],
+            },
+            "properties": {
+                "id": r["id"],
+                "name": r["name"],
+                "description": r["description"],
+                "poi_type": r["poi_type"],
+                "era_start": r["era_start"],
+                "era_end": r["era_end"],
+                "era_label": r["era_label"],
+                "townland": r["townland"],
+                "image_url": r["image_url"],
+                "source_url": r["source_url"],
+            },
+        })
+
+    return {"type": "FeatureCollection", "features": features}
+
+
+def get_poi(poi_id: int):
+    """Get a single POI with linked articles and persons."""
+    conn = get_conn()
+    row = conn.execute("SELECT * FROM pois WHERE id = ?", (poi_id,)).fetchone()
+    if not row:
+        conn.close()
+        return None
+
+    poi = dict(row)
+
+    # Get linked entities
+    links = conn.execute(
+        "SELECT entity_type, entity_id, relationship FROM poi_links WHERE poi_id = ?",
+        (poi_id,),
+    ).fetchall()
+
+    linked_articles = []
+    linked_persons = []
+    for link in links:
+        link = dict(link)
+        if link["entity_type"] == "article":
+            article = conn.execute(
+                "SELECT id, title, url, source FROM articles WHERE id = ?",
+                (link["entity_id"],),
+            ).fetchone()
+            if article:
+                a = dict(article)
+                a["relationship"] = link["relationship"]
+                linked_articles.append(a)
+        elif link["entity_type"] == "person":
+            person = conn.execute(
+                "SELECT id, name, birth_year, death_year, birth_location FROM persons WHERE id = ?",
+                (link["entity_id"],),
+            ).fetchone()
+            if person:
+                p = dict(person)
+                p["relationship"] = link["relationship"]
+                linked_persons.append(p)
+
+    conn.close()
+    poi["linked_articles"] = linked_articles
+    poi["linked_persons"] = linked_persons
+    return poi
+
+
+def get_whatwashere(townland=None, era=None):
+    """Get historical data for a townland, optionally filtered by era."""
+    conn = get_conn()
+    result = {"townland": None, "pois": [], "persons": [], "articles": []}
+
+    if townland:
+        # Get townland info
+        tb = conn.execute(
+            "SELECT * FROM townland_boundaries WHERE LOWER(name) = LOWER(?)",
+            (townland,),
+        ).fetchone()
+        if tb:
+            result["townland"] = {
+                "name": tb["name"],
+                "name_irish": tb["name_irish"],
+                "area_acres": tb["area_acres"],
+                "barony": tb["barony"],
+                "parish": tb["parish"],
+            }
+
+        # Get POIs in this townland
+        poi_sql = "SELECT * FROM pois WHERE LOWER(townland) = LOWER(?)"
+        poi_params = [townland]
+
+        if era:
+            era_ranges = {
+                "norman":   (1177, 1350),
+                "medieval": (1350, 1600),
+                "famine":   (1845, 1852),
+                "modern":   (1900, 2100),
+            }
+            if era.lower() in era_ranges:
+                start, end = era_ranges[era.lower()]
+                poi_sql += " AND (era_start IS NULL OR era_start <= ?) AND (era_end IS NULL OR era_end >= ?)"
+                poi_params.extend([end, start])
+
+        pois = conn.execute(poi_sql, poi_params).fetchall()
+        result["pois"] = [dict(r) for r in pois]
+
+        # Get persons born in this townland
+        persons = conn.execute(
+            """SELECT id, name, birth_year, death_year, birth_location,
+                      notable_for, tier, confidence, category
+               FROM persons
+               WHERE LOWER(birth_location) LIKE LOWER(?)
+               ORDER BY birth_year""",
+            (f"%{townland}%",),
+        ).fetchall()
+        result["persons"] = [dict(r) for r in persons]
+
+    conn.close()
+    return result
+
+
+def get_persons_with_coords():
+    """Get all persons that have birth coordinates set."""
+    conn = get_conn()
+    rows = conn.execute(
+        """SELECT id, name, birth_year, death_year, birth_location,
+                  birth_lat, birth_lng, notable_for, tier, confidence
+           FROM persons
+           WHERE birth_lat IS NOT NULL AND birth_lng IS NOT NULL
+           ORDER BY name"""
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
