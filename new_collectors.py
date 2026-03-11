@@ -75,13 +75,32 @@ HEADERS = {
 }
 DELAY = 1.2
 
+# ── Interrupt handling (shared with collect.py) ───────────────────────────
+_interrupted = False
+
+def _check_interrupt():
+    if _interrupted:
+        raise KeyboardInterrupt
+
+def _sleep(seconds):
+    """Interruptible sleep — breaks into short chunks so Ctrl+C is responsive."""
+    _check_interrupt()
+    end = time.monotonic() + seconds
+    while time.monotonic() < end:
+        remaining = end - time.monotonic()
+        time.sleep(min(remaining, 0.3))
+        _check_interrupt()
+
 
 def _get(url, params=None, timeout=15, extra_headers=None):
+    _check_interrupt()
     h = {**HEADERS, **(extra_headers or {})}
     try:
         r = requests.get(url, params=params, headers=h, timeout=timeout)
         r.raise_for_status()
         return r
+    except KeyboardInterrupt:
+        raise
     except Exception as e:
         log.warning(f"GET {url} → {e}")
         return None
@@ -210,7 +229,7 @@ class HathiTrustCollector:
                 "sort": "relevance",
             })
             if not r:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             soup = BeautifulSoup(r.text, "lxml")
             found, new = 0, 0
@@ -246,9 +265,9 @@ class HathiTrustCollector:
                 found += 1
                 if is_new:
                     new += 1; total_new += 1
-                time.sleep(DELAY * 0.5)
+                _sleep(DELAY * 0.5)
             db.log_run(self.NAME, q, found, new)
-            time.sleep(DELAY)
+            _sleep(DELAY)
         return total_new
 
 
@@ -283,7 +302,7 @@ class EuropeanaCollector:
                 "media": "false",
             })
             if not r:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             items = r.json().get("items") or []
             found, new = 0, 0
@@ -314,9 +333,9 @@ class EuropeanaCollector:
                 found += 1
                 if is_new:
                     new += 1; total_new += 1
-                time.sleep(DELAY * 0.3)
+                _sleep(DELAY * 0.3)
             db.log_run(self.NAME, q, found, new)
-            time.sleep(DELAY)
+            _sleep(DELAY)
         return total_new
 
 
@@ -350,7 +369,7 @@ class OpenAlexCollector:
                 "mailto": "duinneacha@gmail.com",
             })
             if not r:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             results = r.json().get("results") or []
             found, new = 0, 0
@@ -389,9 +408,9 @@ class OpenAlexCollector:
                 found += 1
                 if is_new:
                     new += 1; total_new += 1
-                time.sleep(DELAY * 0.3)
+                _sleep(DELAY * 0.3)
             db.log_run(self.NAME, q, found, new)
-            time.sleep(DELAY)
+            _sleep(DELAY)
         return total_new
 
 
@@ -426,7 +445,7 @@ class TroveCollector:
                 "key": self.KEY,
             })
             if not r:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             zone = r.json().get("category", [{}])
             articles_raw = []
@@ -457,9 +476,9 @@ class TroveCollector:
                 found += 1
                 if is_new:
                     new += 1; total_new += 1
-                time.sleep(DELAY * 0.3)
+                _sleep(DELAY * 0.3)
             db.log_run(self.NAME, q, found, new)
-            time.sleep(DELAY)
+            _sleep(DELAY)
         return total_new
 
 
@@ -499,12 +518,14 @@ class ChroniclingAmericaCollector:
                 "sequence": 1,
             })
             if not r:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             try:
                 data = r.json()
+            except KeyboardInterrupt:
+                raise
             except Exception:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             items = data.get("items") or []
             found, new = 0, 0
@@ -537,9 +558,9 @@ class ChroniclingAmericaCollector:
                 found += 1
                 if is_new:
                     new += 1; total_new += 1
-                time.sleep(DELAY * 0.3)
+                _sleep(DELAY * 0.3)
             db.log_run(self.NAME, q, found, new)
-            time.sleep(DELAY)
+            _sleep(DELAY)
         return total_new
 
 
@@ -579,13 +600,13 @@ class CoreAPICollector:
                 if r.status_code == 429:
                     wait = float(r.headers.get("X-RateLimit-Retry-After", 5))
                     log.warning(f"{self.NAME}: 429 rate-limited, sleeping {wait}s")
-                    time.sleep(wait)
+                    _sleep(wait)
                     continue
                 if r.status_code >= 500 and attempt < max_retries:
                     backoff = 3 * (2 ** attempt)
                     log.warning(f"{self.NAME}: {r.status_code} on attempt "
                                 f"{attempt+1}, retrying in {backoff}s")
-                    time.sleep(backoff)
+                    _sleep(backoff)
                     continue
                 r.raise_for_status()
                 return r
@@ -594,9 +615,11 @@ class CoreAPICollector:
                 if attempt < max_retries:
                     backoff = 3 * (2 ** attempt)
                     log.warning(f"{self.NAME}: {e}, retrying in {backoff}s")
-                    time.sleep(backoff)
+                    _sleep(backoff)
                 else:
                     log.warning(f"{self.NAME}: {e} (exhausted retries)")
+            except KeyboardInterrupt:
+                raise
             except Exception as e:
                 log.warning(f"{self.NAME}: {e}")
                 break
@@ -643,7 +666,7 @@ class CoreAPICollector:
                 r = self._core_request(
                     {"q": q, "limit": self.PAGE_SIZE, "offset": offset})
                 if not r:
-                    time.sleep(self.CORE_DELAY)
+                    _sleep(self.CORE_DELAY)
                     continue
                 all_pages_failed = False
                 body = r.json()
@@ -686,8 +709,8 @@ class CoreAPICollector:
                     if is_new:
                         new += 1
                         total_new += 1
-                    time.sleep(DELAY * 0.3)
-                time.sleep(self.CORE_DELAY)
+                    _sleep(DELAY * 0.3)
+                _sleep(self.CORE_DELAY)
             if all_pages_failed:
                 db.log_run(self.NAME, q, found, new,
                            error=f"All pages failed for query: {q}")
@@ -722,7 +745,7 @@ class CarrigtwohillHistoricalSocietyCollector:
         for url, page_type in self.PAGES:
             r = _get(url)
             if not r:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             soup = BeautifulSoup(r.text, "lxml")
             title = soup.find("title")
@@ -746,7 +769,7 @@ class CarrigtwohillHistoricalSocietyCollector:
             found += 1
             if is_new:
                 new += 1; total_new += 1
-            time.sleep(DELAY)
+            _sleep(DELAY)
         db.log_run(self.NAME, "site-crawl", found, new)
         return total_new
 
@@ -771,7 +794,7 @@ class CarrigtwohillCommunityCouncilCollector:
         for url, page_type in self.PAGES:
             r = _get(url)
             if not r:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             soup = BeautifulSoup(r.text, "lxml")
             # Remove nav/footer
@@ -798,7 +821,7 @@ class CarrigtwohillCommunityCouncilCollector:
             found += 1
             if is_new:
                 new += 1; total_new += 1
-            time.sleep(DELAY)
+            _sleep(DELAY)
         db.log_run(self.NAME, "site-crawl", found, new)
         return total_new
 
@@ -824,7 +847,7 @@ class WorkhousesOrgCollector:
         for url, page_type in self.PAGES:
             r = _get(url)
             if not r:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             soup = BeautifulSoup(r.text, "lxml")
             title_el = soup.find("title")
@@ -848,7 +871,7 @@ class WorkhousesOrgCollector:
             found += 1
             if is_new:
                 new += 1; total_new += 1
-            time.sleep(DELAY)
+            _sleep(DELAY)
         db.log_run(self.NAME, "site-crawl", found, new)
         return total_new
 
@@ -873,7 +896,7 @@ class IrelandXOCollector:
         for url in self.URLS:
             r = _get(url)
             if not r:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             soup = BeautifulSoup(r.text, "lxml")
             for tag in soup(["script", "style", "nav", "footer"]):
@@ -899,7 +922,7 @@ class IrelandXOCollector:
             found += 1
             if is_new:
                 new += 1; total_new += 1
-            time.sleep(DELAY)
+            _sleep(DELAY)
         db.log_run(self.NAME, "urls", found, new)
         return total_new
 
@@ -974,7 +997,7 @@ class IrishArchivesResourceCollector:
         for url in self.URLS:
             r = _get(url)
             if not r:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             soup = BeautifulSoup(r.text, "lxml")
             for tag in soup(["script", "style", "nav", "footer"]):
@@ -1000,7 +1023,7 @@ class IrishArchivesResourceCollector:
             found += 1
             if is_new:
                 new += 1; total_new += 1
-            time.sleep(DELAY)
+            _sleep(DELAY)
         db.log_run(self.NAME, "urls", found, new)
         return total_new
 
@@ -1026,7 +1049,7 @@ class CorkArchivesCollector:
         for url in self.URLS:
             r = _get(url)
             if not r:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             soup = BeautifulSoup(r.text, "lxml")
             for tag in soup(["script", "style", "nav", "footer"]):
@@ -1052,7 +1075,7 @@ class CorkArchivesCollector:
             found += 1
             if is_new:
                 new += 1; total_new += 1
-            time.sleep(DELAY)
+            _sleep(DELAY)
         db.log_run(self.NAME, "urls", found, new)
         return total_new
 
@@ -1080,7 +1103,7 @@ class NationalFamineCollector:
         for url, source_label in self.URLS:
             r = _get(url)
             if not r:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             soup = BeautifulSoup(r.text, "lxml")
             for tag in soup(["script", "style", "nav", "footer"]):
@@ -1106,7 +1129,7 @@ class NationalFamineCollector:
             found += 1
             if is_new:
                 new += 1; total_new += 1
-            time.sleep(DELAY)
+            _sleep(DELAY)
         db.log_run(self.NAME, "urls", found, new)
         return total_new
 
@@ -1186,7 +1209,7 @@ class HistoricGravesCollector:
         for term in self.TERMS:
             r = _get(self.SEARCH, params={"q": term, "county": "Cork"})
             if not r:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             soup = BeautifulSoup(r.text, "lxml")
             found, new = 0, 0
@@ -1217,9 +1240,9 @@ class HistoricGravesCollector:
                 found += 1
                 if is_new:
                     new += 1; total_new += 1
-                time.sleep(DELAY * 0.5)
+                _sleep(DELAY * 0.5)
             db.log_run(self.NAME, term, found, new)
-            time.sleep(DELAY)
+            _sleep(DELAY)
         return total_new
 
 
@@ -1238,7 +1261,7 @@ class IrishGraveyardsCollector:
         for term in terms:
             r = _get(self.SEARCH, params={"q": term, "county": "Cork"})
             if not r:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             soup = BeautifulSoup(r.text, "lxml")
             found, new = 0, 0
@@ -1266,9 +1289,9 @@ class IrishGraveyardsCollector:
                 found += 1
                 if is_new:
                     new += 1; total_new += 1
-                time.sleep(DELAY * 0.5)
+                _sleep(DELAY * 0.5)
             db.log_run(self.NAME, term, found, new)
-            time.sleep(DELAY)
+            _sleep(DELAY)
         return total_new
 
 
@@ -1292,7 +1315,7 @@ class IGPWebCollector:
         for url in self.URLS:
             r = _get(url)
             if not r:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             soup = BeautifulSoup(r.text, "lxml")
             title_el = soup.find("title")
@@ -1316,7 +1339,7 @@ class IGPWebCollector:
             found += 1
             if is_new:
                 new += 1; total_new += 1
-            time.sleep(DELAY)
+            _sleep(DELAY)
         db.log_run(self.NAME, "urls", found, new)
         return total_new
 
@@ -1343,7 +1366,7 @@ class FindAGraveCollector:
                 "memorialid": "",
             })
             if not r:
-                time.sleep(DELAY * 2)
+                _sleep(DELAY * 2)
                 continue
             soup = BeautifulSoup(r.text, "lxml")
             found, new = 0, 0
@@ -1371,9 +1394,9 @@ class FindAGraveCollector:
                 found += 1
                 if is_new:
                     new += 1; total_new += 1
-                time.sleep(DELAY * 0.8)
+                _sleep(DELAY * 0.8)
             db.log_run(self.NAME, term, found, new)
-            time.sleep(DELAY * 2)
+            _sleep(DELAY * 2)
         return total_new
 
 
@@ -1465,6 +1488,8 @@ class NLICatalogueCollector:
                 try:
                     data = r.json()
                     records = data.get("records", [])
+                except KeyboardInterrupt:
+                    raise
                 except Exception:
                     pass
 
@@ -1486,7 +1511,7 @@ class NLICatalogueCollector:
                             href = "https://catalogue.nli.ie" + href
                         snippet = item.get_text(separator=" ", strip=True)[:500]
                         records.append({"title": t, "_url": href, "_snippet": snippet})
-                time.sleep(DELAY)
+                _sleep(DELAY)
 
             found, new = 0, 0
             for rec in records[:10]:
@@ -1529,9 +1554,9 @@ class NLICatalogueCollector:
                 if is_new:
                     new += 1
                     total_new += 1
-                time.sleep(DELAY)
+                _sleep(DELAY)
             db.log_run(self.NAME, term, found, new)
-            time.sleep(DELAY * 2)
+            _sleep(DELAY * 2)
         return total_new
 
 
@@ -1569,7 +1594,7 @@ class BritishHistoryOnlineCollector:
             params = {"query": term}
             r = _get(self.SEARCH_BASE, params=params, timeout=20)
             if not r:
-                time.sleep(DELAY * 2)
+                _sleep(DELAY * 2)
                 continue
             soup = BeautifulSoup(r.text, "lxml")
             found, new = 0, 0
@@ -1608,9 +1633,9 @@ class BritishHistoryOnlineCollector:
                 if is_new:
                     new += 1
                     total_new += 1
-                time.sleep(DELAY * 0.5)
+                _sleep(DELAY * 0.5)
             db.log_run(self.NAME, term, found, new)
-            time.sleep(DELAY * 2)
+            _sleep(DELAY * 2)
         return total_new
 
 
@@ -1654,9 +1679,11 @@ class DRICollector:
                 r = requests.get(url, params=params, headers=auth_headers, timeout=20)
                 r.raise_for_status()
                 data = r.json()
+            except KeyboardInterrupt:
+                raise
             except Exception as e:
                 log.warning(f"{self.NAME} [{term}]: {e}")
-                time.sleep(DELAY * 2)
+                _sleep(DELAY * 2)
                 continue
             items = data.get("collections", data.get("results", data.get("items", [])))
             found, new = 0, 0
@@ -1689,9 +1716,9 @@ class DRICollector:
                 if is_new:
                     new += 1
                     total_new += 1
-                time.sleep(DELAY)
+                _sleep(DELAY)
             db.log_run(self.NAME, term, found, new)
-            time.sleep(DELAY * 2)
+            _sleep(DELAY * 2)
         return total_new
 
 

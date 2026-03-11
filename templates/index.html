@@ -546,7 +546,7 @@
           <span class="badge badge-{{ a.category|default('general') }}">{{ a.category|default('general')|title }}</span>
           <span>📰 {{ a.source }}</span>
           {% if a.date_pub %}
-          <span>📅 {{ a.date_pub[:10] if a.date_pub else '' }}</span>
+          <span>📅 {{ a.date_pub|fmt_date }}</span>
           {% endif %}
           {% if a.author %}
           <span>✍ {{ a.author[:40] }}</span>

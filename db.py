@@ -21,6 +21,17 @@ BASE_DIR = Path(__file__).parent
 DB_PATH   = BASE_DIR / "data" / "carrigtwohill.db"
 ARCHIVE_DIR = BASE_DIR / "data" / "archives"
 
+# Domains whose articles should never be collected
+BLOCKED_DOMAINS = {
+    "rip.ie",
+    "legacy.com",
+    "funeralnotices.ie",
+    "deathnotices.ie",
+    "familyannouncements.ie",
+    "tributes.com",
+    "everhere.ie",
+}
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Connection
@@ -354,11 +365,36 @@ def init_db():
 # Write
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _is_blocked(url: str, title: str = "") -> bool:
+    """Return True if the URL belongs to a blocked domain or the title
+    indicates a redirect to one (e.g. Google News → RIP.ie)."""
+    from urllib.parse import urlparse
+    try:
+        host = urlparse(url).netloc.lower()
+    except Exception:
+        host = ""
+    for domain in BLOCKED_DOMAINS:
+        if host == domain or host.endswith("." + domain):
+            return True
+    # Catch redirects (Google News RSS → rip.ie etc.) by checking the title
+    if title:
+        title_lower = title.lower()
+        for domain in BLOCKED_DOMAINS:
+            if f"- {domain}" in title_lower or f"| {domain}" in title_lower:
+                return True
+    return False
+
+
 def insert_article(data: dict) -> tuple:
     """
     Insert an article. Returns (is_new: bool, row_id: int).
     Silently ignores duplicates (same URL).
     """
+    url = data.get("url") or ""
+    title_check = data.get("title") or ""
+    if _is_blocked(url, title_check):
+        return False, 0
+
     tags = data.get("tags", [])
     if isinstance(tags, list):
         tags = json.dumps(tags)
@@ -399,6 +435,32 @@ def update_archived_path(article_id: int, path: str):
     conn.execute("UPDATE articles SET archived=? WHERE id=?", (path, article_id))
     conn.commit()
     conn.close()
+
+
+def purge_blocked_articles() -> int:
+    """Delete articles from blocked domains and remove their archived files."""
+    conn = get_conn()
+    rows = conn.execute("SELECT id, title, url, archived FROM articles").fetchall()
+    to_delete = [r for r in rows if _is_blocked(r["url"], r["title"])]
+    if not to_delete:
+        conn.close()
+        return 0
+    for r in to_delete:
+        if r["archived"]:
+            try:
+                archive_path = Path(r["archived"])
+                if archive_path.exists():
+                    archive_path.unlink()
+                parent = archive_path.parent
+                if parent.exists() and not any(parent.iterdir()):
+                    parent.rmdir()
+            except OSError:
+                pass  # OneDrive / permission lock — DB row still gets deleted
+    ids = [r["id"] for r in to_delete]
+    conn.execute(f"DELETE FROM articles WHERE id IN ({','.join('?' * len(ids))})", ids)
+    conn.commit()
+    conn.close()
+    return len(to_delete)
 
 
 def log_run(source, term, found, new, error=""):

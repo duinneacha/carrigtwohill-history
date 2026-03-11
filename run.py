@@ -19,6 +19,12 @@ import db
 def main():
     mode = sys.argv[1].lower() if len(sys.argv) > 1 else "web"
 
+    if mode == "--purge-blocked":
+        db.init_db()
+        removed = db.purge_blocked_articles()
+        print(f"Purged {removed} article(s) from blocked domains.")
+        return
+
     if mode in ("collect", "both"):
         print("Running content collector …")
         import collect

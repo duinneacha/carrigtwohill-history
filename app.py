@@ -29,6 +29,34 @@ except ImportError:
 app = Flask(__name__, template_folder="templates")
 app.secret_key = "carrigtwohill-research-key"
 
+
+@app.template_filter("fmt_date")
+def fmt_date(value):
+    """Format date_pub to 'DD Mon YYYY' or just 'YYYY' for year-only values."""
+    if not value:
+        return ""
+    s = value.strip()
+    # Year-only: '1989', '2024'
+    if len(s) <= 4 and s.isdigit():
+        return s
+    # Try RFC 2822: 'Thu, 26 Feb 2026 00:27:05 GMT'
+    from email.utils import parsedate_to_datetime
+    try:
+        dt = parsedate_to_datetime(s)
+        return dt.strftime("%d %b %Y").lstrip("0")
+    except Exception:
+        pass
+    # Try ISO 8601: '1999-01-01T00:00:00Z'
+    for fmt in ("%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d"):
+        try:
+            dt = datetime.strptime(s, fmt)
+            return dt.strftime("%d %b %Y").lstrip("0")
+        except ValueError:
+            continue
+    # Fallback: return raw value
+    return s
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Startup
 # ─────────────────────────────────────────────────────────────────────────────

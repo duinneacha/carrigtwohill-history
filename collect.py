@@ -73,6 +73,7 @@ if _env_path.exists():
             os.environ.setdefault(_k.strip(), _v.strip())
 
 import db
+import new_collectors
 from new_collectors import NEW_COLLECTORS
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -102,13 +103,33 @@ SEARCH_TERMS = [
 # Delay between requests (seconds) – be polite
 DELAY = 1.2
 
+# ── Interrupt handling ────────────────────────────────────────────────────
+_interrupted = False
+
+def _check_interrupt():
+    """Raise KeyboardInterrupt if the user has pressed Ctrl+C."""
+    if _interrupted:
+        raise KeyboardInterrupt
+
+def _sleep(seconds):
+    """Interruptible sleep — breaks into short chunks so Ctrl+C is responsive."""
+    _check_interrupt()
+    end = time.monotonic() + seconds
+    while time.monotonic() < end:
+        remaining = end - time.monotonic()
+        time.sleep(min(remaining, 0.3))
+        _check_interrupt()
+
 
 def _get(url, params=None, timeout=15):
     """Safe HTTP GET with headers."""
+    _check_interrupt()
     try:
         r = requests.get(url, params=params, headers=HEADERS, timeout=timeout)
         r.raise_for_status()
         return r
+    except KeyboardInterrupt:
+        raise
     except Exception as e:
         log.warning(f"GET {url} → {e}")
         return None
@@ -152,6 +173,8 @@ def _archive_article(url: str, article_id: int):
             fpath.write_text(text[:500_000], encoding="utf-8")
             db.update_archived_path(article_id, str(fpath))
             log.info(f"  📄 Archived article {article_id}")
+    except KeyboardInterrupt:
+        raise
     except Exception as e:
         log.warning(f"Archive failed for {url}: {e}")
 
@@ -219,7 +242,7 @@ class WikipediaCollector:
                         new += 1
                         total_new += 1
                         _archive_article(page["url"], aid)
-                time.sleep(DELAY)
+                _sleep(DELAY)
             db.log_run(self.NAME, term, found, new)
         return total_new
 
@@ -279,7 +302,7 @@ class InternetArchiveCollector:
                 if is_new:
                     new += 1
                     total_new += 1
-                time.sleep(DELAY)
+                _sleep(DELAY)
 
             db.log_run(self.NAME, term, found, new)
         return total_new
@@ -324,7 +347,7 @@ class OpenLibraryCollector:
                 if is_new:
                     new += 1
                     total_new += 1
-                time.sleep(DELAY * 0.5)
+                _sleep(DELAY * 0.5)
             db.log_run(self.NAME, term, found, new)
         return total_new
 
@@ -400,7 +423,7 @@ class DuchasCollector:
                     total_new += 1
             db.log_run(self.NAME, f"Cork page {page}", found, new)
             page += 1
-            time.sleep(DELAY)
+            _sleep(DELAY)
         return total_new
 
 
@@ -434,6 +457,8 @@ class LogainmCollector:
                     items = data.get("results") or data.get("features") or [data]
                 else:
                     items = []
+            except KeyboardInterrupt:
+                raise
             except Exception:
                 continue
 
@@ -472,7 +497,7 @@ class LogainmCollector:
                 if is_new:
                     new += 1
                     total_new += 1
-                time.sleep(DELAY * 0.5)
+                _sleep(DELAY * 0.5)
             db.log_run(self.NAME, term, found, new)
         return total_new
 
@@ -533,7 +558,9 @@ class RSSCollector:
                         total_new += 1
                         _archive_article(article["url"], aid)
                 db.log_run(source_name, feed_url, found, new)
-                time.sleep(DELAY)
+                _sleep(DELAY)
+            except KeyboardInterrupt:
+                raise
             except Exception as e:
                 log.warning(f"RSS feed error {feed_url}: {e}")
         return total_new
@@ -611,7 +638,7 @@ class CELTCollector:
         for term in ["Carrigtwohill", "Barrymore Cork", "Barry Cork medieval"]:
             r = _get(self.SEARCH, params={"lookfor": term, "type": "AllFields", "view": "list"})
             if not r:
-                time.sleep(DELAY)
+                _sleep(DELAY)
                 continue
             soup = BeautifulSoup(r.text, "lxml")
             found, new = 0, 0
@@ -646,7 +673,7 @@ class CELTCollector:
                     total_new += 1
                     _archive_article(full_url, aid)
             db.log_run(self.NAME, term, found, new)
-            time.sleep(DELAY)
+            _sleep(DELAY)
         return total_new
 
 
@@ -802,6 +829,8 @@ class NationalMonumentsCollector:
                     "relevance_score": 8.0,
                 })
             return results
+        except KeyboardInterrupt:
+            raise
         except Exception as e:
             log.warning(f"NMS WFS parse error: {e}")
             return []
@@ -1545,7 +1574,30 @@ ALL_COLLECTORS = [
 ] + NEW_COLLECTORS  # 17 additional collectors from new_collectors.py (Tier 1–3)
 
 
+def _set_interrupted(*_args):
+    """Signal handler — sets the flag in both modules."""
+    global _interrupted
+    _interrupted = True
+    new_collectors._interrupted = True
+
+
 def run_all(verbose=True):
+    global _interrupted
+    _interrupted = False
+    new_collectors._interrupted = False
+
+    # Install SIGINT handler so Ctrl+C sets the flag immediately,
+    # even during a sleep or blocking network call.
+    # Only works from the main thread (CLI use); skipped when called
+    # from APScheduler or other background threads.
+    import signal
+    import threading
+    _in_main_thread = threading.current_thread() is threading.main_thread()
+    prev_handler = None
+    if _in_main_thread:
+        prev_handler = signal.getsignal(signal.SIGINT)
+        signal.signal(signal.SIGINT, _set_interrupted)
+
     db.init_db()
     total = 0
     print("\n🔍 Starting Carrigtwohill content collection …\n")
@@ -1557,6 +1609,8 @@ def run_all(verbose=True):
         print(f"  📌 Seeded {s} known reference articles")
 
     for collector in ALL_COLLECTORS:
+        if _interrupted:
+            break
         try:
             if verbose:
                 print(f"  ⏳ {collector.NAME} …", end=" ", flush=True)
@@ -1564,13 +1618,23 @@ def run_all(verbose=True):
             total += n
             if verbose:
                 print(f"{n} new")
+        except KeyboardInterrupt:
+            _set_interrupted()
+            print("\n⛔ Interrupted — stopping collection.")
+            break
         except Exception as e:
+            if _interrupted:
+                print("\n⛔ Interrupted — stopping collection.")
+                break
             log.error(f"Collector {collector.NAME} failed: {e}")
             if verbose:
                 print(f"ERROR: {e}")
 
+    if _in_main_thread and prev_handler is not None:
+        signal.signal(signal.SIGINT, prev_handler)
     stats = db.get_stats()
-    print(f"\n✅ Collection complete. Total articles in repository: {stats['total']}")
+    label = "Collection interrupted" if _interrupted else "Collection complete"
+    print(f"\n{'⚠️' if _interrupted else '✅'} {label}. Total articles in repository: {stats['total']}")
     print(f"   New this run: {total}\n")
     return total
 

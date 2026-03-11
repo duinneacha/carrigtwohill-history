@@ -12,7 +12,10 @@
       "Bash(node:*)",
       "WebFetch(domain:docs.gaois.ie)",
       "WebFetch(domain:api.core.ac.uk)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(grep:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)"
     ]
   }
 }

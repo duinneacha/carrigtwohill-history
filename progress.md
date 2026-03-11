@@ -1,6 +1,6 @@
 # Carrigtwohill Interactive Historical Map — Implementation Progress
 
-**Last updated:** 2026-03-01 (end of session 5)
+**Last updated:** 2026-03-02 (end of session 6)
 
 ---
 
@@ -154,7 +154,7 @@ Confidence:        New townlands (Anngrove, Garrancloyne, etc.) score 1.0 specif
 | OpenAlex | ✅ Working | |
 | Trove | ❌ 401 | No API key yet (awaiting approval) |
 | Chronicling America | ❌ 404 | URL redirect changed |
-| CORE | ✅ Working | v2: retry w/ backoff for 500s, pagination, downloadUrl fallback, 3s rate-limit delay |
+| CORE | ❌ Server 500 | Was working in session 4; now returning 500 on all queries (their issue) |
 | NLI Catalogue | ❌ 403 | API path likely wrong |
 | British History Online | ✅ Working | |
 | DRI | ⏸️ Skipped | No API key yet |
@@ -202,6 +202,60 @@ OK: 270  |  Own Access Required: 27  |  Unavailable: 103
 Access-restricted: mostly DOI/journal articles and Cork Historical Society (paywalled/institutional).
 Unavailable: includes archaeology.ie fragment URLs, restructured sites, dead links.
 
+### Session 6 (2026-03-02)
+
+#### 16. URL Domain Blocklist & Purge (COMPLETE)
+
+**Problem:** 36 death-notice articles from RIP.ie were collected via Google News RSS redirects (`news.google.com/rss/articles/...` → `rip.ie`). These aren't relevant to historical research.
+
+**Solution:** Blocklist in `db.py` that filters at insert time + cleanup function for existing data.
+
+- **`db.py`**: Added `BLOCKED_DOMAINS` set (7 domains: rip.ie, legacy.com, funeralnotices.ie, deathnotices.ie, familyannouncements.ie, tributes.com, everhere.ie)
+- **`db.py`**: Added `_is_blocked(url, title)` helper — checks URL domain AND title text for patterns like `- RIP.ie` to catch Google News redirects
+- **`db.py`**: Added guard at top of `insert_article()` — returns `(False, 0)` for blocked URLs/titles, same shape as a duplicate so no callers need changes
+- **`db.py`**: Added `purge_blocked_articles()` — scans all articles, deletes DB rows matching blocklist, removes archived files from disk (with OSError handling for OneDrive locks)
+- **`run.py`**: Added `--purge-blocked` CLI command — calls `db.purge_blocked_articles()`, prints summary, exits
+
+**Purge results:** 36 RIP.ie death notices removed. Article count: 438 → 402.
+
+#### 17. Ctrl+C Interrupt Responsiveness (COMPLETE)
+
+**Problem:** Pressing Ctrl+C during collection had no effect — the program continued through retry loops, `time.sleep()` calls, and `except Exception` blocks for 30+ seconds before responding. On Windows, `time.sleep()` blocks for the full duration before Python checks for signals.
+
+**Solution:** Three-part fix across `collect.py` and `new_collectors.py`:
+
+1. **`_sleep()` function** (both files): Replaces all `time.sleep()` calls throughout both collector modules. Sleeps in 0.3s chunks, checking an `_interrupted` flag between each. Maximum delay before responding to Ctrl+C: **0.3 seconds**.
+2. **SIGINT signal handler**: `run_all()` installs a signal handler (`_set_interrupted()`) that immediately sets `_interrupted = True` in both `collect.py` and `new_collectors.py` when Ctrl+C is pressed — works even during blocking network requests.
+3. **`except KeyboardInterrupt: raise`**: Added before every `except Exception` block in both files (6 in `collect.py`, 5 in `new_collectors.py`) so the interrupt can never be accidentally swallowed.
+4. **`run_all()` loop**: Checks `_interrupted` flag before each collector, breaks immediately on interrupt, prints summary of what was collected before stopping.
+
+**Test results:**
+- Flag already set → `_sleep()` raises immediately (0ms)
+- Flag set mid-sleep → interrupts within 0.3s
+- Normal sleep unaffected (0.50s for 0.5s sleep)
+
+#### 18. Fix signal handler crash in APScheduler thread (COMPLETE)
+
+**Problem:** `app.py` runs `collect.run_all()` via APScheduler in a background thread. The SIGINT signal handler added in item 17 crashed with `ValueError: signal only works in main thread of the main interpreter`.
+
+**Fix:** Wrapped `signal.signal()` install/restore in `threading.current_thread() is threading.main_thread()` check. Signal handler is only installed for CLI use (`python run.py collect`); safely skipped when APScheduler calls `run_all()` from a background thread. The `_sleep()` chunking still provides interrupt responsiveness from CLI.
+
+#### 19. Purge irrelevant zero-score articles (COMPLETE)
+
+**Problem:** 158 articles had a relevance score of 0.0 — no mention of Carrigtwohill or related keywords at all. Mostly false-positive academic papers from CORE (90) and OpenAlex (59) on unrelated topics (retinal imaging, cystic fibrosis, plasminogen research, etc.), plus a few broad Wikipedia/Internet Archive results.
+
+**Fix:** Deleted all 158 zero-score articles from the database and their archived files from disk. Article count: 402 → 244. All remaining articles now have a relevance score > 0 and display a score badge in the UI.
+
+#### 20. Deploy folder updated (COMPLETE)
+
+Refreshed `deploy/` folder with all current files for PythonAnywhere upload:
+- Updated Python files: `app.py`, `db.py`, `collect.py`, `new_collectors.py`, `check_links.py`, `run.py`
+- Added missing templates: `map.html`, `persons.html`, `person_detail.html`
+- Added missing static assets: `static/js/map.js`, `static/css/map.css`, `static/data/townlands.geojson`
+- Added missing module: `persons/__init__.py`, `confidence.py`, `seed_data.py`
+- Fresh database copy (244 articles, no RIP.ie, no zero-score)
+- Updated `requirements.txt` (was just `flask`, now has all 8 dependencies)
+
 ---
 
 ## What Could Come Next (Phase 2 — Future Work)
@@ -219,15 +273,16 @@ Unavailable: includes archaeology.ie fragment URLs, restructured sites, dead lin
 
 | File | Change |
 |------|--------|
-| `db.py` | MAP_SCHEMA, _migrate_map_tables(), 9 new functions (session 1); _migrate_articles_link_status() (session 5) |
+| `db.py` | MAP_SCHEMA, _migrate_map_tables(), 9 new functions (session 1); _migrate_articles_link_status() (session 5); BLOCKED_DOMAINS, _is_blocked(), insert_article guard, purge_blocked_articles() (session 6) |
 | `app.py` | 5 new map routes (session 2) |
 | `persons/confidence.py` | Townlands list expanded 11 -> 41 entries (session 2) |
 | `templates/index.html` | Nav link added (session 2); link status pills (session 5) |
 | `templates/persons.html` | Nav link added (session 2) |
 | `templates/person_detail.html` | Nav link added (session 2) |
 | `templates/article.html` | Nav link added (session 2); link status badges (session 5) |
-| `collect.py` | `.env` loader, Logainm URL/parser fix, Dúchas apiKey auth, timeout increase (session 4) |
-| `new_collectors.py` | CORE API key from env, author parsing fix (session 4) |
+| `collect.py` | `.env` loader, Logainm URL/parser fix, Dúchas apiKey auth, timeout increase (session 4); _sleep(), SIGINT handler, KeyboardInterrupt re-raises, interrupt-aware run_all() (session 6) |
+| `new_collectors.py` | CORE API key from env, author parsing fix (session 4); _sleep(), _check_interrupt(), KeyboardInterrupt re-raises (session 6) |
+| `run.py` | Added `--purge-blocked` CLI command (session 6) |
 | `.env` | Added GAOIS_API_KEY, CORE_API_KEY (session 4) |
 
 ## Files Created
