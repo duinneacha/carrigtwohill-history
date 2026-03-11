@@ -85,14 +85,18 @@ def index():
     category   = request.args.get("cat", "all")
     src_type   = request.args.get("type", "all")
     src_filter = request.args.get("src", "").strip()
+    rel        = request.args.get("rel", "all")
     page       = max(1, int(request.args.get("page", 1)))
     per_page   = 20
+
+    min_score = float(rel) if rel != "all" else None
 
     articles, total = db.search(
         query=query,
         category=category if category != "all" else None,
         source_type=src_type if src_type != "all" else None,
         source=src_filter if src_filter else None,
+        min_score=min_score,
         page=page,
         per_page=per_page,
     )
@@ -114,6 +118,7 @@ def index():
         query=query,
         category=category,
         src_type=src_type,
+        rel=rel,
         categories=cats,
         source_types=types,
         stats=stats,

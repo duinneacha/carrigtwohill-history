@@ -477,7 +477,7 @@ def log_run(source, term, found, new, error=""):
 # Read
 # ─────────────────────────────────────────────────────────────────────────────
 
-def search(query="", category=None, source_type=None, source=None, page=1, per_page=20):
+def search(query="", category=None, source_type=None, source=None, min_score=None, page=1, per_page=20):
     """Full-text search with optional filters. Returns (rows, total_count)."""
     conn = get_conn()
     offset = (page - 1) * per_page
@@ -515,11 +515,14 @@ def search(query="", category=None, source_type=None, source=None, page=1, per_p
         if source:
             filters += " AND {}.source = ?".format("a" if join else "articles")
             params.append(source)
+        if min_score is not None:
+            filters += " AND {}.score >= ?".format("a" if join else "articles")
+            params.append(min_score)
 
         count_sql = f"SELECT COUNT(*) FROM ({base}{filters})"
         total = conn.execute(count_sql, params).fetchone()[0]
 
-        order = " ORDER BY a.date_found DESC" if join else " ORDER BY date_found DESC"
+        order = " ORDER BY a.score DESC, a.date_found DESC" if join else " ORDER BY score DESC, date_found DESC"
         sql = base + filters + order + f" LIMIT {per_page} OFFSET {offset}"
         rows = [dict(r) for r in conn.execute(sql, params).fetchall()]
         return rows, total

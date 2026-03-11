@@ -447,6 +447,15 @@
               {% endfor %}
             </select>
           </div>
+          <div class="filter-group">
+            <label>Relevance</label>
+            <select name="rel" onchange="this.form.submit()">
+              <option value="all" {% if rel=='all' %}selected{% endif %}>All articles</option>
+              <option value="5" {% if rel=='5' %}selected{% endif %}>Carrigtwohill (5+)</option>
+              <option value="7" {% if rel=='7' %}selected{% endif %}>Strong match (7+)</option>
+              <option value="9" {% if rel=='9' %}selected{% endif %}>Top relevance (9+)</option>
+            </select>
+          </div>
         </form>
       </div>
     </div>
@@ -507,8 +516,9 @@
         >
         <input type="hidden" name="cat"  value="{{ category }}">
         <input type="hidden" name="type" value="{{ src_type }}">
+        <input type="hidden" name="rel"  value="{{ rel }}">
         <button type="submit" class="btn btn-primary">🔍 Search</button>
-        {% if query or category != 'all' or src_type != 'all' %}
+        {% if query or category != 'all' or src_type != 'all' or rel != 'all' %}
         <a href="/" class="btn btn-outline">✕ Clear</a>
         {% endif %}
       </form>
@@ -528,6 +538,9 @@
         {% endif %}
         {% if src_type != 'all' %}
           &nbsp;·&nbsp; Type: <strong>{{ src_type|title }}</strong>
+        {% endif %}
+        {% if rel != 'all' %}
+          &nbsp;·&nbsp; Score: <strong>{{ rel }}+</strong>
         {% endif %}
       </span>
       <span style="font-size:.8em;color:var(--muted)">
@@ -588,13 +601,13 @@
     <!-- PAGINATION -->
     {% if total_pages > 1 %}
     <div class="pagination">
-      <a href="?q={{ query }}&cat={{ category }}&type={{ src_type }}&page={{ [page-1,1]|max }}"
+      <a href="?q={{ query }}&cat={{ category }}&type={{ src_type }}&rel={{ rel }}&page={{ [page-1,1]|max }}"
          class="page-btn {{ 'disabled' if page==1 }}">‹</a>
       {% for p in range([1,page-3]|max, [total_pages+1,page+4]|min) %}
-      <a href="?q={{ query }}&cat={{ category }}&type={{ src_type }}&page={{ p }}"
+      <a href="?q={{ query }}&cat={{ category }}&type={{ src_type }}&rel={{ rel }}&page={{ p }}"
          class="page-btn {{ 'active' if p==page }}">{{ p }}</a>
       {% endfor %}
-      <a href="?q={{ query }}&cat={{ category }}&type={{ src_type }}&page={{ [page+1,total_pages]|min }}"
+      <a href="?q={{ query }}&cat={{ category }}&type={{ src_type }}&rel={{ rel }}&page={{ [page+1,total_pages]|min }}"
          class="page-btn {{ 'disabled' if page==total_pages }}">›</a>
     </div>
     {% endif %}

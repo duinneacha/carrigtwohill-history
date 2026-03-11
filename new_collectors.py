@@ -438,12 +438,11 @@ class TroveCollector:
         total_new = 0
         for q in self.QUERIES:
             r = _get(self.API, params={
-                "query": q,
+                "q": q,
                 "category": "newspaper",
                 "encoding": "json",
                 "n": 20,
-                "key": self.KEY,
-            })
+            }, extra_headers={"X-API-KEY": self.KEY})
             if not r:
                 _sleep(DELAY)
                 continue
@@ -456,7 +455,9 @@ class TroveCollector:
                 title = item.get("heading") or item.get("title") or "Trove Article"
                 url   = item.get("troveUrl") or item.get("identifier") or "https://trove.nla.gov.au"
                 snippet = item.get("snippet") or item.get("description") or ""
-                newspaper = item.get("title") or ""
+                # title field in v3 is an object {id, title} for newspaper name
+                title_obj = item.get("title", {})
+                newspaper = title_obj.get("title", "") if isinstance(title_obj, dict) else str(title_obj)
                 pub_date  = item.get("date") or ""
                 article = {
                     "title": str(title)[:300],
@@ -1645,13 +1646,12 @@ class DRICollector:
     trusted digital repository, aggregating digital objects from NUI Galway,
     UCC, Trinity College, National Museum, and dozens of regional archives.
 
-    REST API documented at: https://guides.dri.ie/developer-guide/01-api-doc.html
-    Requires an API key: register at https://repository.dri.ie
-    Once received, add DRI_API_KEY=your_key to the .env file.
+    Uses the public /catalog endpoint (Solr-backed, no auth required).
+    API docs: https://repository.dri.ie/api-docs
     """
 
     NAME = "Digital Repository of Ireland"
-    API_BASE = "https://repository.dri.ie/api/v1"
+    CATALOG_URL = "https://repository.dri.ie/catalog"
     SEARCH_TERMS = [
         "Carrigtwohill",
         "Templecurraheen",
@@ -1661,55 +1661,68 @@ class DRICollector:
         "East Cork history",
     ]
 
+    @staticmethod
+    def _parse_date(doc):
+        """Extract date string from DRI Solr date_tesim field."""
+        dates = doc.get("date_tesim", [])
+        if not dates:
+            return ""
+        # Format: "name=1939-10-30; start=1939-10-30;"
+        raw = dates[0]
+        for part in raw.split(";"):
+            part = part.strip()
+            if part.startswith("name="):
+                return part[5:]
+        return raw
+
     def collect(self):
-        api_key = os.environ.get("DRI_API_KEY", "")
-        if not api_key:
-            log.info(
-                f"{self.NAME}: No DRI_API_KEY in .env — skipping. "
-                "Register at https://repository.dri.ie then add "
-                "DRI_API_KEY=your_key to the .env file."
-            )
-            return 0
-        auth_headers = {**HEADERS, "Authorization": f"Token token={api_key}"}
         total_new = 0
         for term in self.SEARCH_TERMS:
-            url = f"{self.API_BASE}/collections"
-            params = {"q": term, "per_page": 10}
+            r = _get(self.CATALOG_URL, params={"q": term, "per_page": 10},
+                     extra_headers={"Accept": "application/json"})
+            if not r:
+                _sleep(DELAY * 2)
+                continue
             try:
-                r = requests.get(url, params=params, headers=auth_headers, timeout=20)
-                r.raise_for_status()
                 data = r.json()
             except KeyboardInterrupt:
                 raise
             except Exception as e:
-                log.warning(f"{self.NAME} [{term}]: {e}")
+                log.warning(f"{self.NAME} [{term}]: bad JSON — {e}")
                 _sleep(DELAY * 2)
                 continue
-            items = data.get("collections", data.get("results", data.get("items", [])))
+            docs = data.get("response", {}).get("docs", [])
             found, new = 0, 0
-            for item in (items or [])[:10]:
-                title = item.get("title", item.get("name", ""))
+            for doc in docs[:10]:
+                titles = doc.get("title_tesim", [])
+                title = titles[0] if titles else ""
                 if not title:
                     continue
-                desc = item.get("description", "")
-                item_id = item.get("id", item.get("pid", ""))
+                descs = doc.get("description_tesim", [])
+                desc = descs[0] if descs else ""
+                creators = doc.get("creator_tesim", [])
+                author = creators[0] if creators else ""
+                pub_date = self._parse_date(doc)
+                item_id = doc.get("id", "")
                 item_url = (f"https://repository.dri.ie/catalog/{item_id}"
                             if item_id else "https://repository.dri.ie")
+                collection = doc.get("root_collection_tesim", [""])[0]
                 content = f"{title}. {desc}".strip(". ")
                 article = {
                     "title": title[:300],
                     "url": item_url,
                     "content": content[:2000],
-                    "summary": content[:500],
+                    "summary": f"{collection} | {pub_date} | {desc[:300]}".strip(" |"),
                     "source": self.NAME,
                     "source_type": "archive",
                     "category": "history",
-                    "date_published": "",
-                    "author": "",
+                    "date_published": pub_date,
+                    "author": author,
                     "tags": json.dumps(["dri", "digital-repository-ireland",
                                         "multi-institution", "heritage"]),
                     "relevance_score": _relevance(content + " " + term),
-                    "notes": _ai_meta("tier1_academic", self.NAME),
+                    "notes": _ai_meta("tier1_academic", self.NAME,
+                                      {"collection": collection}),
                 }
                 is_new, _ = db.insert_article(article)
                 found += 1

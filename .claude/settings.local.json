@@ -15,7 +15,17 @@
       "Bash(pip install:*)",
       "Bash(grep:*)",
       "Bash(mkdir:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "mcp__claude_ai_Gmail__gmail_search_messages",
+      "mcp__claude_ai_Gmail__gmail_read_message",
+      "WebFetch(domain:trove.nla.gov.au)",
+      "WebFetch(domain:api.trove.nla.gov.au)",
+      "WebFetch(domain:wragge.github.io)",
+      "Bash(cd \"C:/Users/USER/OneDrive/Documents/coworker/Carrigtwohill_History/carrigtwohill_system\" && python -c \"\nimport os\nfrom dotenv import load_dotenv\nload_dotenv\\(\\)\nimport requests\nkey = os.environ.get\\('TROVE_API_KEY', ''\\)\nprint\\(f'Key: {key[:6]}...'\\)\n\nr = requests.get\\('https://api.trove.nla.gov.au/v3/result', \n    params={'q': 'Carrigtwohill Ireland', 'category': 'newspaper', 'encoding': 'json', 'n': 5},\n    headers={'X-API-KEY': key},\n    timeout=20\\)\nprint\\(f'Status: {r.status_code}'\\)\nif r.status_code == 200:\n    data = r.json\\(\\)\n    cats = data.get\\('category', []\\)\n    for cat in cats:\n        recs = cat.get\\('records', {}\\)\n        articles = recs.get\\('article', []\\)\n        total = recs.get\\('total', '?'\\)\n        print\\(f'Total results: {total}, returned: {len\\(articles\\)}'\\)\n        for a in articles[:5]:\n            heading = a.get\\('heading', '?'\\)[:80]\n            date = a.get\\('date', '?'\\)\n            print\\(f'  - [{date}] {heading}'\\)\nelse:\n    print\\(f'Body: {r.text[:300]}'\\)\n\")",
+      "Bash(cd \"C:/Users/USER/OneDrive/Documents/coworker/Carrigtwohill_History/carrigtwohill_system\" && python -c \"\nimport os\nfrom dotenv import load_dotenv\nload_dotenv\\(\\)\nimport requests\nkey = os.environ.get\\('EUROPEANA_API_KEY', ''\\)\nprint\\(f'Key: {key}'\\)\n\nr = requests.get\\('https://api.europeana.eu/record/v2/search.json', params={\n    'wskey': key,\n    'query': 'Carrigtwohill',\n    'rows': 5,\n}, timeout=15\\)\nprint\\(f'Status: {r.status_code}'\\)\nif r.status_code == 200:\n    data = r.json\\(\\)\n    total = data.get\\('totalResults', 0\\)\n    items = data.get\\('items', []\\)\n    print\\(f'Total results: {total}, returned: {len\\(items\\)}'\\)\n    for item in items:\n        title = \\(item.get\\('title'\\) or ['?']\\)[0][:80]\n        provider = item.get\\('dataProvider', ['?']\\)[0] if item.get\\('dataProvider'\\) else '?'\n        print\\(f'  - {title} [{provider}]'\\)\nelse:\n    print\\(f'Body: {r.text[:300]}'\\)\n\")",
+      "Bash(cd \"C:/Users/USER/OneDrive/Documents/coworker/Carrigtwohill_History/carrigtwohill_system\" && python -c \"\nimport requests, re\nfrom bs4 import BeautifulSoup\n\nr = requests.get\\('https://catalogue.nli.ie/Search/Results',\n    params={'lookfor': 'Carrigtwohill', 'type': 'AllFields'},\n    timeout=20\\)\nsoup = BeautifulSoup\\(r.text, 'lxml'\\)\n\nresults = soup.find_all\\('div', class_='result'\\)[:10]\nprint\\(f'Results: {len\\(results\\)}'\\)\nfor i, item in enumerate\\(results\\):\n    link = item.find\\('a', href=True\\)\n    title_el = item.find\\(['h2', 'h3']\\)\n    t = title_el.get_text\\(strip=True\\) if title_el else \\(link.get_text\\(strip=True\\) if link else '?'\\)\n    href = link['href'] if link else ''\n    print\\(f'{i+1}. {t[:90]}'\\)\n    print\\(f'   {href}'\\)\n\")",
+      "WebFetch(domain:guides.dri.ie)",
+      "WebFetch(domain:repository.dri.ie)"
     ]
   }
 }
