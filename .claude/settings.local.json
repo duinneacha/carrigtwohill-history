@@ -25,7 +25,8 @@
       "Bash(cd \"C:/Users/USER/OneDrive/Documents/coworker/Carrigtwohill_History/carrigtwohill_system\" && python -c \"\nimport os\nfrom dotenv import load_dotenv\nload_dotenv\\(\\)\nimport requests\nkey = os.environ.get\\('EUROPEANA_API_KEY', ''\\)\nprint\\(f'Key: {key}'\\)\n\nr = requests.get\\('https://api.europeana.eu/record/v2/search.json', params={\n    'wskey': key,\n    'query': 'Carrigtwohill',\n    'rows': 5,\n}, timeout=15\\)\nprint\\(f'Status: {r.status_code}'\\)\nif r.status_code == 200:\n    data = r.json\\(\\)\n    total = data.get\\('totalResults', 0\\)\n    items = data.get\\('items', []\\)\n    print\\(f'Total results: {total}, returned: {len\\(items\\)}'\\)\n    for item in items:\n        title = \\(item.get\\('title'\\) or ['?']\\)[0][:80]\n        provider = item.get\\('dataProvider', ['?']\\)[0] if item.get\\('dataProvider'\\) else '?'\n        print\\(f'  - {title} [{provider}]'\\)\nelse:\n    print\\(f'Body: {r.text[:300]}'\\)\n\")",
       "Bash(cd \"C:/Users/USER/OneDrive/Documents/coworker/Carrigtwohill_History/carrigtwohill_system\" && python -c \"\nimport requests, re\nfrom bs4 import BeautifulSoup\n\nr = requests.get\\('https://catalogue.nli.ie/Search/Results',\n    params={'lookfor': 'Carrigtwohill', 'type': 'AllFields'},\n    timeout=20\\)\nsoup = BeautifulSoup\\(r.text, 'lxml'\\)\n\nresults = soup.find_all\\('div', class_='result'\\)[:10]\nprint\\(f'Results: {len\\(results\\)}'\\)\nfor i, item in enumerate\\(results\\):\n    link = item.find\\('a', href=True\\)\n    title_el = item.find\\(['h2', 'h3']\\)\n    t = title_el.get_text\\(strip=True\\) if title_el else \\(link.get_text\\(strip=True\\) if link else '?'\\)\n    href = link['href'] if link else ''\n    print\\(f'{i+1}. {t[:90]}'\\)\n    print\\(f'   {href}'\\)\n\")",
       "WebFetch(domain:guides.dri.ie)",
-      "WebFetch(domain:repository.dri.ie)"
+      "WebFetch(domain:repository.dri.ie)",
+      "Bash(wc:*)"
     ]
   }
 }

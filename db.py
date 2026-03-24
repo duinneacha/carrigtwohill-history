@@ -569,13 +569,10 @@ def export_csv() -> str:
         "FROM articles ORDER BY date_found DESC"
     ).fetchall()
     conn.close()
+    fieldnames = ["id", "title", "url", "source", "source_type", "category",
+                  "date_found", "date_pub", "author", "summary", "tags", "score"]
     buf = io.StringIO()
-    writer = csv.DictWriter(buf, fieldnames=[r[0] for r in conn.execute(
-        "PRAGMA table_info(articles)").fetchall()
-        if r[1] in ("id","title","url","source","source_type","category",
-                    "date_found","date_pub","author","summary","tags","score")
-    ] if False else ["id","title","url","source","source_type","category",
-                     "date_found","date_pub","author","summary","tags","score"])
+    writer = csv.DictWriter(buf, fieldnames=fieldnames)
     writer.writeheader()
     writer.writerows([dict(r) for r in rows])
     return buf.getvalue()
@@ -1087,6 +1084,7 @@ def get_whatwashere(townland=None, era=None):
             era_ranges = {
                 "norman":   (1177, 1350),
                 "medieval": (1350, 1600),
+                "tudor":    (1500, 1650),
                 "famine":   (1845, 1852),
                 "modern":   (1900, 2100),
             }

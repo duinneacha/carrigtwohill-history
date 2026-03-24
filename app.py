@@ -12,7 +12,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 
 from flask import (Flask, render_template, request, jsonify,
-                   redirect, url_for, Response, send_file)
+                   redirect, url_for, Response)
 
 # allow running from any working directory
 sys.path.insert(0, str(Path(__file__).parent))
@@ -27,7 +27,7 @@ except ImportError:
     HAS_SCHEDULER = False
 
 app = Flask(__name__, template_folder="templates")
-app.secret_key = "carrigtwohill-research-key"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "carrigtwohill-dev-only-key")
 
 
 @app.template_filter("fmt_date")
@@ -61,8 +61,14 @@ def fmt_date(value):
 # Startup
 # ─────────────────────────────────────────────────────────────────────────────
 
+_startup_done = False
+
 @app.before_request
 def startup():
+    global _startup_done
+    if _startup_done:
+        return
+    _startup_done = True
     db.init_db()
     # Seed notable persons on first run
     try:
@@ -72,7 +78,6 @@ def startup():
             print(f"  ↳ Seeded {seeded} notable persons ({existed} already existed)")
     except Exception as e:
         print(f"  ↳ Persons seeding skipped: {e}")
-    app.before_request_funcs[None].remove(startup)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -86,10 +91,16 @@ def index():
     src_type   = request.args.get("type", "all")
     src_filter = request.args.get("src", "").strip()
     rel        = request.args.get("rel", "all")
-    page       = max(1, int(request.args.get("page", 1)))
+    try:
+        page = max(1, int(request.args.get("page", 1)))
+    except (ValueError, TypeError):
+        page = 1
     per_page   = 20
 
-    min_score = float(rel) if rel != "all" else None
+    try:
+        min_score = float(rel) if rel != "all" else None
+    except (ValueError, TypeError):
+        min_score = None
 
     articles, total = db.search(
         query=query,
@@ -140,12 +151,13 @@ def article_detail(aid):
     archived_text = ""
     if article.get("archived"):
         try:
-            raw = Path(article["archived"]).read_bytes()[:200]
-            if raw.lstrip().startswith(b"%PDF"):
+            raw_start = Path(article["archived"]).read_bytes()[:200]
+            if raw_start.lstrip().startswith(b"%PDF"):
                 archived_text = ""  # PDF binary — not displayable as text
             else:
-                archived_text = raw.decode("utf-8", errors="replace") + \
-                    Path(article["archived"]).read_text(encoding="utf-8", errors="replace")[200:30000]
+                archived_text = Path(article["archived"]).read_text(
+                    encoding="utf-8", errors="replace"
+                )[:30000]
         except Exception:
             pass
     return render_template("article.html", article=article, archived_text=archived_text)
@@ -166,9 +178,15 @@ def export_csv():
     )
 
 
+COLLECT_TOKEN = os.environ.get("COLLECT_API_TOKEN", "")
+
 @app.route("/api/collect", methods=["POST"])
 def trigger_collect():
     """Run the collector in a background thread so the UI doesn't hang."""
+    if COLLECT_TOKEN:
+        provided = request.headers.get("Authorization", "").removeprefix("Bearer ").strip()
+        if provided != COLLECT_TOKEN:
+            return jsonify({"error": "Unauthorized"}), 401
     def run():
         clt.run_all(verbose=False)
     t = threading.Thread(target=run, daemon=True)
@@ -182,7 +200,10 @@ def api_search():
     q      = request.args.get("q", "")
     cat    = request.args.get("cat", None)
     stype  = request.args.get("type", None)
-    page   = int(request.args.get("page", 1))
+    try:
+        page = int(request.args.get("page", 1))
+    except (ValueError, TypeError):
+        page = 1
     rows, total = db.search(query=q, category=cat, source_type=stype, page=page)
     return jsonify({"results": rows, "total": total})
 
@@ -207,7 +228,10 @@ def persons_list():
     tier       = request.args.get("tier", None)
     confidence = request.args.get("confidence", None)
     category   = request.args.get("category", "all")
-    page       = max(1, int(request.args.get("page", 1)))
+    try:
+        page = max(1, int(request.args.get("page", 1)))
+    except (ValueError, TypeError):
+        page = 1
     per_page   = 20
 
     persons, total = db.search_persons(
@@ -281,7 +305,10 @@ def api_persons():
     tier = request.args.get("tier", None)
     conf = request.args.get("confidence", None)
     cat  = request.args.get("category", None)
-    page = int(request.args.get("page", 1))
+    try:
+        page = int(request.args.get("page", 1))
+    except (ValueError, TypeError):
+        page = 1
     rows, total = db.search_persons(query=q, tier=tier, confidence=conf,
                                      category=cat, page=page)
     return jsonify({"results": rows, "total": total})

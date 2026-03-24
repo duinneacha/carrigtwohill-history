@@ -1,0 +1,1132 @@
+Folder PATH listing for volume ADLAPTOP
+Volume serial number is 9056-D121
+C:.
+|   .env
+|   .gitignore
+|   app.py
+|   check_links.py
+|   collect.py
+|   COLLECTOR_HEALTH_REPORT.md
+|   db.py
+|   new_collectors.py
+|   NEXT_PHASE_NOTABLE_PERSONS.md
+|   progress.md
+|   requirements.txt
+|   run.py
+|   setup.sh
+|   tree_report.txt
+|   
++---.claude
+|       settings.local.json
+|       
++---.git
+|   |   COMMIT_EDITMSG
+|   |   config
+|   |   description
+|   |   HEAD
+|   |   index
+|   |   
+|   +---hooks
+|   |       applypatch-msg.sample
+|   |       commit-msg.sample
+|   |       fsmonitor-watchman.sample
+|   |       post-update.sample
+|   |       pre-applypatch.sample
+|   |       pre-commit.sample
+|   |       pre-merge-commit.sample
+|   |       pre-push.sample
+|   |       pre-rebase.sample
+|   |       pre-receive.sample
+|   |       prepare-commit-msg.sample
+|   |       push-to-checkout.sample
+|   |       sendemail-validate.sample
+|   |       update.sample
+|   |       
+|   +---info
+|   |       exclude
+|   |       
+|   +---logs
+|   |   |   HEAD
+|   |   |   
+|   |   \---refs
+|   |       +---heads
+|   |       |       main
+|   |       |       
+|   |       \---remotes
+|   |           \---origin
+|   |                   main
+|   |                   
+|   +---objects
+|   |   +---01
+|   |   |       40a40f667b675ae9857ef5a7034e9da453316d
+|   |   |       a8c402b3cf6648a1e9640fb26227eb7d371ad2
+|   |   |       cc045166ae64de86679e0ee1539344035f45e8
+|   |   |       
+|   |   +---05
+|   |   |       c3b111c95d20122a8561ef44cfdd0a67b021e9
+|   |   |       
+|   |   +---06
+|   |   |       07d65a7a716b468aa053b68cc3440b92458608
+|   |   |       9979c410c9462cddf464ba3fea82be186b66f2
+|   |   |       
+|   |   +---0e
+|   |   |       06e79f34829e7c23e94aabc5bea9c9de2c3f26
+|   |   |       
+|   |   +---12
+|   |   |       e743a39d4ebbee2d4eb09ec4b638f357c95856
+|   |   |       
+|   |   +---14
+|   |   |       ee0fa97baf5d8763430a2fd25855445477bccb
+|   |   |       
+|   |   +---15
+|   |   |       952af85ca10ac20c6de7ff03be29a1ed1b3991
+|   |   |       
+|   |   +---16
+|   |   |       094f0d0d59629139f6eec61ce53d08a7538327
+|   |   |       
+|   |   +---17
+|   |   |       af070cd733a9713f1e39a0062e214b88bb7080
+|   |   |       
+|   |   +---1b
+|   |   |       c6e93a171b6bbc5c24be1a4819e65fcc51a55d
+|   |   |       
+|   |   +---20
+|   |   |       c0ceed5e75dc474fad373869b14341b6c6abb8
+|   |   |       
+|   |   +---2d
+|   |   |       4628d82223822bce94affacb844cf84a5b48a2
+|   |   |       
+|   |   +---2f
+|   |   |       57491448e52f3f19518b3413e66119d8fe333a
+|   |   |       fc468507a586b0762abef607d8d8afcc3d000f
+|   |   |       
+|   |   +---35
+|   |   |       f551e0e4691486ee30664007bf4bb6c71b7296
+|   |   |       
+|   |   +---38
+|   |   |       242ac78db3d1e8f9046117d17afe347ef0cd9b
+|   |   |       
+|   |   +---40
+|   |   |       0a94a668ffbcd26aa4c661916ba696918a0409
+|   |   |       
+|   |   +---45
+|   |   |       016388db7a2a134d0580a0b64a4aac37fab45b
+|   |   |       b2854443fcdd56ffaf2ad4190278ccedc49263
+|   |   |       
+|   |   +---4b
+|   |   |       92a28c43cc1bebb28470ccde1240ffea27ec1e
+|   |   |       bdd260a937752763c8dfe44a3f607d731efa81
+|   |   |       
+|   |   +---4e
+|   |   |       f2584ef6a9382bd111f80b08151436872a4b31
+|   |   |       f75a7fbefab2d714506a76c9e078bd7fc5ca37
+|   |   |       
+|   |   +---50
+|   |   |       aa80eaf34a963219dcf53cec67a38f394cd7d8
+|   |   |       da85d54ce71b8684e34b540e651b622667f965
+|   |   |       
+|   |   +---53
+|   |   |       b6c125c86a0aa6468c8bae15552d1f74197c34
+|   |   |       
+|   |   +---58
+|   |   |       53ec1dfca7d9920d4c59a1b042c593ad74c3ce
+|   |   |       
+|   |   +---5a
+|   |   |       1c2437b9c10ff355401eb571deb37923b6a0b9
+|   |   |       20cdf0aa0f3ad3fe032e7006378e101a3fa0e6
+|   |   |       
+|   |   +---67
+|   |   |       a570e59cb3c0055da5bfab93cc972477f98460
+|   |   |       
+|   |   +---6a
+|   |   |       909159ae24f4d4b578077f18303271b8bdbbba
+|   |   |       
+|   |   +---6c
+|   |   |       df7893104ff5709667d68efaef47cde18004ee
+|   |   |       
+|   |   +---6e
+|   |   |       175a6558bdb3fbdf3dc1c7bbe96b0084318017
+|   |   |       
+|   |   +---72
+|   |   |       697ea36104a9df6124d88693fc25e00681ff7b
+|   |   |       
+|   |   +---77
+|   |   |       e7c37322d5a775cadbc34d8b21746c0ef1fd7a
+|   |   |       
+|   |   +---7a
+|   |   |       b17eec85b8718403b8470f503359b10cccc2b2
+|   |   |       
+|   |   +---7c
+|   |   |       dd763e5dbd64e0b48eb9cb92f6003d24159153
+|   |   |       
+|   |   +---7d
+|   |   |       0edebdde249394228c1bdb3da41b5615d3ff41
+|   |   |       
+|   |   +---7f
+|   |   |       c6bc61a636263afa8e6bdc46fa7dae0a5fc1cc
+|   |   |       
+|   |   +---89
+|   |   |       a2cb25bd4946f93e107036d486ab14c4990bbc
+|   |   |       b58f0c42c53296bc2b837fcb4008075121c890
+|   |   |       
+|   |   +---8a
+|   |   |       a797032eb038db843d2a5c73c6be73324c8d1c
+|   |   |       
+|   |   +---94
+|   |   |       176ea6f7ec4733dfbaee7eba429dd4e7beb893
+|   |   |       
+|   |   +---95
+|   |   |       0c09f6071478fff920459a306439ff96ebdd2d
+|   |   |       d20e4d9fa8d4d74f61f471866218417adeceeb
+|   |   |       faf26599ce8114a379527d020b5a1c23795901
+|   |   |       
+|   |   +---9c
+|   |   |       e3a3f5eb71a3673259475a31c0b4abc0b47598
+|   |   |       
+|   |   +---a0
+|   |   |       81db88edb025555dce99b8ca9c15f4d45382ca
+|   |   |       
+|   |   +---a4
+|   |   |       c57dfd13c066dbbc252545bbd4abae6d58648d
+|   |   |       
+|   |   +---ad
+|   |   |       36be527e07024e25a25ef2aa84f18f467c610c
+|   |   |       89a430bc8b67afbf1b5df9e305421483afb408
+|   |   |       
+|   |   +---b2
+|   |   |       78b4f7fc3dce696ce39559300357b4838cf58f
+|   |   |       
+|   |   +---bd
+|   |   |       49356885f3d3da5dfa106ef47bd72b25bc2b22
+|   |   |       beb812795f827e6d2f69770646c0c8626ecae8
+|   |   |       
+|   |   +---c3
+|   |   |       54965a874bdbe6cca81c2afabb8959db4c6322
+|   |   |       
+|   |   +---c6
+|   |   |       d45dbce2aed45b291d3c6d5aefdb2d466249c4
+|   |   |       
+|   |   +---c9
+|   |   |       2442c7ccf45a1567cf8a76390bddfa28c74658
+|   |   |       585e9cb4d3c3e62b87f0bf32e6e95e4de3d000
+|   |   |       a64cb762e20233a49674bf9a68d80f060921b7
+|   |   |       
+|   |   +---ca
+|   |   |       d5bea4a25338b77343e63f7914e77b34f9bb45
+|   |   |       
+|   |   +---cb
+|   |   |       8508f1bc33c78bed2f07a4fa9fcb16816d82cb
+|   |   |       d8a2016b3ab34b8e8e2cfc50502ab76025b2da
+|   |   |       
+|   |   +---d9
+|   |   |       7946560b305f4e65f4fa54b7af5454855f93c4
+|   |   |       
+|   |   +---e1
+|   |   |       2b86815bdbf1e2ec277488530b429622d46ceb
+|   |   |       a57b51241ebaaca09eb8c7bde8c5ae32f5237c
+|   |   |       
+|   |   +---e2
+|   |   |       abb7266372a632c71334bf87c43299810a69bb
+|   |   |       
+|   |   +---e3
+|   |   |       d2ebb95537921d3c8998cc6236488bdf8198d9
+|   |   |       
+|   |   +---e6
+|   |   |       9de29bb2d1d6434b8b29ae775ad8c2e48c5391
+|   |   |       
+|   |   +---e7
+|   |   |       bdde0d19a7c4f81887b37df1f582c97be48532
+|   |   |       
+|   |   +---e9
+|   |   |       7b4625237a2c82ffbd2d8d95d9d625322beb5a
+|   |   |       
+|   |   +---ed
+|   |   |       07f8389b31ea99c20595eaa2d00b1335487e84
+|   |   |       
+|   |   +---info
+|   |   \---pack
+|   \---refs
+|       +---heads
+|       |       main
+|       |       
+|       +---remotes
+|       |   \---origin
+|       |           main
+|       |           
+|       \---tags
++---data
+|   |   carrigtwohill.db
+|   |   
+|   \---archives
+|       +---1
+|       |       content.txt
+|       |       
+|       +---1155
+|       |       content.txt
+|       |       
+|       +---12
+|       |       content.txt
+|       |       
+|       +---13
+|       |       content.txt
+|       |       
+|       +---1398
+|       |       content.txt
+|       |       
+|       +---14
+|       |       content.txt
+|       |       
+|       +---1409
+|       +---15
+|       |       content.txt
+|       |       
+|       +---16
+|       |       content.txt
+|       |       
+|       +---1621
+|       |       content.txt
+|       |       
+|       +---17
+|       |       content.txt
+|       |       
+|       +---18
+|       |       content.txt
+|       |       
+|       +---19
+|       |       content.txt
+|       |       
+|       +---20
+|       |       content.txt
+|       |       
+|       +---2092
+|       |       content.txt
+|       |       
+|       +---21
+|       |       content.txt
+|       |       
+|       +---2115
+|       |       content.txt
+|       |       
+|       +---222
+|       |       content.txt
+|       |       
+|       +---223
+|       |       content.txt
+|       |       
+|       +---224
+|       |       content.txt
+|       |       
+|       +---225
+|       |       content.txt
+|       |       
+|       +---229
+|       |       content.txt
+|       |       
+|       +---23
+|       |       content.txt
+|       |       
+|       +---230
+|       |       content.txt
+|       |       
+|       +---232
+|       |       content.txt
+|       |       
+|       +---24
+|       |       content.txt
+|       |       
+|       +---25
+|       |       content.txt
+|       |       
+|       +---2572
+|       |       content.txt
+|       |       
+|       +---2601
+|       +---2602
+|       |       content.txt
+|       |       
+|       +---2603
+|       +---2604
+|       |       content.txt
+|       |       
+|       +---2605
+|       |       content.txt
+|       |       
+|       +---2606
+|       |       content.txt
+|       |       
+|       +---2607
+|       |       content.txt
+|       |       
+|       +---2608
+|       |       content.txt
+|       |       
+|       +---2609
+|       |       content.txt
+|       |       
+|       +---2610
+|       |       content.txt
+|       |       
+|       +---2611
+|       |       content.txt
+|       |       
+|       +---2612
+|       +---2613
+|       +---2614
+|       +---2615
+|       +---2616
+|       +---2617
+|       +---2618
+|       |       content.txt
+|       |       
+|       +---2619
+|       +---262
+|       |       content.txt
+|       |       
+|       +---2620
+|       +---2621
+|       |       content.txt
+|       |       
+|       +---2622
+|       |       content.txt
+|       |       
+|       +---2623
+|       +---2624
+|       +---2625
+|       |       content.txt
+|       |       
+|       +---2626
+|       +---2627
+|       |       content.txt
+|       |       
+|       +---2628
+|       |       content.txt
+|       |       
+|       +---2629
+|       +---2630
+|       |       content.txt
+|       |       
+|       +---2631
+|       |       content.txt
+|       |       
+|       +---2632
+|       +---2633
+|       +---2634
+|       +---2635
+|       |       content.txt
+|       |       
+|       +---2636
+|       +---2637
+|       |       content.txt
+|       |       
+|       +---2638
+|       |       content.txt
+|       |       
+|       +---2639
+|       +---2640
+|       |       content.txt
+|       |       
+|       +---2641
+|       +---2642
+|       |       content.txt
+|       |       
+|       +---2643
+|       +---2644
+|       |       content.txt
+|       |       
+|       +---2645
+|       |       content.txt
+|       |       
+|       +---2646
+|       |       content.txt
+|       |       
+|       +---2647
+|       |       content.txt
+|       |       
+|       +---2648
+|       |       content.txt
+|       |       
+|       +---2649
+|       |       content.txt
+|       |       
+|       +---265
+|       |       content.txt
+|       |       
+|       +---2650
+|       |       content.txt
+|       |       
+|       +---2651
+|       |       content.txt
+|       |       
+|       +---2652
+|       |       content.txt
+|       |       
+|       +---2653
+|       |       content.txt
+|       |       
+|       +---2654
+|       |       content.txt
+|       |       
+|       +---2655
+|       |       content.txt
+|       |       
+|       +---2656
+|       |       content.txt
+|       |       
+|       +---2657
+|       |       content.txt
+|       |       
+|       +---2658
+|       |       content.txt
+|       |       
+|       +---2659
+|       |       content.txt
+|       |       
+|       +---2660
+|       |       content.txt
+|       |       
+|       +---2661
+|       |       content.txt
+|       |       
+|       +---2662
+|       +---2663
+|       |       content.txt
+|       |       
+|       +---2664
+|       +---2665
+|       +---2666
+|       |       content.txt
+|       |       
+|       +---2667
+|       +---2668
+|       +---2669
+|       +---2670
+|       +---2671
+|       |       content.txt
+|       |       
+|       +---2672
+|       +---2673
+|       |       content.txt
+|       |       
+|       +---2674
+|       +---2675
+|       |       content.txt
+|       |       
+|       +---2676
+|       +---2677
+|       +---2678
+|       +---2679
+|       |       content.txt
+|       |       
+|       +---2680
+|       +---2681
+|       |       content.txt
+|       |       
+|       +---2683
+|       |       content.txt
+|       |       
+|       +---2684
+|       |       content.txt
+|       |       
+|       +---2685
+|       |       content.txt
+|       |       
+|       +---2686
+|       |       content.txt
+|       |       
+|       +---2687
+|       |       content.txt
+|       |       
+|       +---2689
+|       |       content.txt
+|       |       
+|       +---2691
+|       |       content.txt
+|       |       
+|       +---2692
+|       |       content.txt
+|       |       
+|       +---2693
+|       |       content.txt
+|       |       
+|       +---2694
+|       |       content.txt
+|       |       
+|       +---2695
+|       |       content.txt
+|       |       
+|       +---2696
+|       |       content.txt
+|       |       
+|       +---2697
+|       |       content.txt
+|       |       
+|       +---27
+|       |       content.txt
+|       |       
+|       +---28
+|       |       content.txt
+|       |       
+|       +---29
+|       |       content.txt
+|       |       
+|       +---2910
+|       |       content.txt
+|       |       
+|       +---30
+|       |       content.txt
+|       |       
+|       +---31
+|       |       content.txt
+|       |       
+|       +---32
+|       |       content.txt
+|       |       
+|       +---3270
+|       |       content.txt
+|       |       
+|       +---3272
+|       |       content.txt
+|       |       
+|       +---33
+|       |       content.txt
+|       |       
+|       +---34
+|       |       content.txt
+|       |       
+|       +---35
+|       |       content.txt
+|       |       
+|       +---36
+|       |       content.txt
+|       |       
+|       +---37
+|       |       content.txt
+|       |       
+|       +---3738
+|       +---3757
+|       |       content.txt
+|       |       
+|       +---3764
+|       |       content.txt
+|       |       
+|       +---3766
+|       |       content.txt
+|       |       
+|       +---3770
+|       |       content.txt
+|       |       
+|       +---3774
+|       |       content.txt
+|       |       
+|       +---3779
+|       |       content.txt
+|       |       
+|       +---3782
+|       |       content.txt
+|       |       
+|       +---39
+|       |       content.txt
+|       |       
+|       +---40
+|       |       content.txt
+|       |       
+|       +---41
+|       |       content.txt
+|       |       
+|       +---4135
+|       |       content.txt
+|       |       
+|       +---4138
+|       +---4166
+|       |       content.txt
+|       |       
+|       +---4184
+|       |       content.txt
+|       |       
+|       +---4193
+|       |       content.txt
+|       |       
+|       +---42
+|       |       content.txt
+|       |       
+|       +---43
+|       |       content.txt
+|       |       
+|       +---44
+|       |       content.txt
+|       |       
+|       +---45
+|       |       content.txt
+|       |       
+|       +---46
+|       |       content.txt
+|       |       
+|       +---47
+|       |       content.txt
+|       |       
+|       +---48
+|       |       content.txt
+|       |       
+|       +---49
+|       |       content.txt
+|       |       
+|       +---5
+|       |       content.txt
+|       |       
+|       +---50
+|       |       content.txt
+|       |       
+|       +---51
+|       |       content.txt
+|       |       
+|       +---52
+|       |       content.txt
+|       |       
+|       +---53
+|       |       content.txt
+|       |       
+|       +---54
+|       |       content.txt
+|       |       
+|       +---55
+|       |       content.txt
+|       |       
+|       +---56
+|       |       content.txt
+|       |       
+|       +---5691
+|       |       content.txt
+|       |       
+|       +---5695
+|       |       content.txt
+|       |       
+|       +---5696
+|       |       content.txt
+|       |       
+|       +---57
+|       |       content.txt
+|       |       
+|       +---5704
+|       +---5711
+|       +---5714
+|       +---5719
+|       +---5722
+|       |       content.txt
+|       |       
+|       +---5732
+|       |       content.txt
+|       |       
+|       +---5742
+|       |       content.txt
+|       |       
+|       +---5752
+|       |       content.txt
+|       |       
+|       +---5767
+|       |       content.txt
+|       |       
+|       +---58
+|       |       content.txt
+|       |       
+|       +---59
+|       |       content.txt
+|       |       
+|       +---6
+|       |       content.txt
+|       |       
+|       +---60
+|       |       content.txt
+|       |       
+|       +---61
+|       |       content.txt
+|       |       
+|       +---6114
+|       |       content.txt
+|       |       
+|       +---6132
+|       |       content.txt
+|       |       
+|       +---6137
+|       |       content.txt
+|       |       
+|       +---6143
+|       |       content.txt
+|       |       
+|       +---6147
+|       |       content.txt
+|       |       
+|       +---6160
+|       |       content.txt
+|       |       
+|       +---6161
+|       |       content.txt
+|       |       
+|       +---6196
+|       |       content.txt
+|       |       
+|       +---62
+|       +---6200
+|       |       content.txt
+|       |       
+|       +---6214
+|       |       content.txt
+|       |       
+|       +---63
+|       |       content.txt
+|       |       
+|       +---64
+|       |       content.txt
+|       |       
+|       +---65
+|       |       content.txt
+|       |       
+|       +---66
+|       |       content.txt
+|       |       
+|       +---67
+|       |       content.txt
+|       |       
+|       +---68
+|       |       content.txt
+|       |       
+|       +---69
+|       +---70
+|       +---71
+|       |       content.txt
+|       |       
+|       +---715
+|       |       content.txt
+|       |       
+|       +---72
+|       |       content.txt
+|       |       
+|       +---73
+|       |       content.txt
+|       |       
+|       +---74
+|       |       content.txt
+|       |       
+|       +---75
+|       +---76
+|       +---77
+|       |       content.txt
+|       |       
+|       +---78
+|       |       content.txt
+|       |       
+|       +---79
+|       |       content.txt
+|       |       
+|       +---8
+|       |       content.txt
+|       |       
+|       +---80
+|       |       content.txt
+|       |       
+|       +---871
+|       |       content.txt
+|       |       
+|       \---948
++---deploy
+|   |   .gitignore
+|   |   app.py
+|   |   check_links.py
+|   |   collect.py
+|   |   db.py
+|   |   new_collectors.py
+|   |   requirements.txt
+|   |   run.py
+|   |   SETUP_PYTHONANYWHERE.md
+|   |   wsgi.py
+|   |   
+|   +---.git
+|   |   |   COMMIT_EDITMSG
+|   |   |   config
+|   |   |   description
+|   |   |   HEAD
+|   |   |   index
+|   |   |   
+|   |   +---hooks
+|   |   |       applypatch-msg.sample
+|   |   |       commit-msg.sample
+|   |   |       fsmonitor-watchman.sample
+|   |   |       post-update.sample
+|   |   |       pre-applypatch.sample
+|   |   |       pre-commit.sample
+|   |   |       pre-merge-commit.sample
+|   |   |       pre-push.sample
+|   |   |       pre-rebase.sample
+|   |   |       pre-receive.sample
+|   |   |       prepare-commit-msg.sample
+|   |   |       push-to-checkout.sample
+|   |   |       sendemail-validate.sample
+|   |   |       update.sample
+|   |   |       
+|   |   +---info
+|   |   |       exclude
+|   |   |       
+|   |   +---logs
+|   |   |   |   HEAD
+|   |   |   |   
+|   |   |   \---refs
+|   |   |       +---heads
+|   |   |       |       main
+|   |   |       |       
+|   |   |       \---remotes
+|   |   |           \---origin
+|   |   |                   main
+|   |   |                   
+|   |   +---objects
+|   |   |   +---01
+|   |   |   |       40a40f667b675ae9857ef5a7034e9da453316d
+|   |   |   |       cc045166ae64de86679e0ee1539344035f45e8
+|   |   |   |       
+|   |   |   +---02
+|   |   |   |       3b2c103b3f23c01a344866628ce010fe9d6a14
+|   |   |   |       
+|   |   |   +---05
+|   |   |   |       c3b111c95d20122a8561ef44cfdd0a67b021e9
+|   |   |   |       
+|   |   |   +---06
+|   |   |   |       07d65a7a716b468aa053b68cc3440b92458608
+|   |   |   |       
+|   |   |   +---0e
+|   |   |   |       06e79f34829e7c23e94aabc5bea9c9de2c3f26
+|   |   |   |       
+|   |   |   +---15
+|   |   |   |       952af85ca10ac20c6de7ff03be29a1ed1b3991
+|   |   |   |       
+|   |   |   +---16
+|   |   |   |       094f0d0d59629139f6eec61ce53d08a7538327
+|   |   |   |       67f7517e3155ee9e1e6e5fc378ef264dabdf7a
+|   |   |   |       
+|   |   |   +---1b
+|   |   |   |       c6e93a171b6bbc5c24be1a4819e65fcc51a55d
+|   |   |   |       
+|   |   |   +---20
+|   |   |   |       c0ceed5e75dc474fad373869b14341b6c6abb8
+|   |   |   |       
+|   |   |   +---2f
+|   |   |   |       57491448e52f3f19518b3413e66119d8fe333a
+|   |   |   |       
+|   |   |   +---32
+|   |   |   |       c10521a9d117a439fb8db605118d1f64025614
+|   |   |   |       f920c7492466cc88563a20cd4d77265014a803
+|   |   |   |       
+|   |   |   +---38
+|   |   |   |       242ac78db3d1e8f9046117d17afe347ef0cd9b
+|   |   |   |       
+|   |   |   +---40
+|   |   |   |       0a94a668ffbcd26aa4c661916ba696918a0409
+|   |   |   |       
+|   |   |   +---45
+|   |   |   |       016388db7a2a134d0580a0b64a4aac37fab45b
+|   |   |   |       3d50ee190fd28f9c9b784d71ef45fd7718a951
+|   |   |   |       
+|   |   |   +---47
+|   |   |   |       61970d31d32f1e24715e590eb00b2cd2afd9f6
+|   |   |   |       
+|   |   |   +---49
+|   |   |   |       d7e60d283fd7d0449cdbab531042d24b11ec6c
+|   |   |   |       
+|   |   |   +---5e
+|   |   |   |       88e6059653a81de3acaa4add14c9555e2b338d
+|   |   |   |       
+|   |   |   +---66
+|   |   |   |       3d15e8ab4a740282b851b753f95669710ddcb2
+|   |   |   |       
+|   |   |   +---68
+|   |   |   |       00d7a8e7b6cf983069f345baf36f1dd92cfec5
+|   |   |   |       
+|   |   |   +---78
+|   |   |   |       491905232ee9129182ba9182301aefeb3ae629
+|   |   |   |       
+|   |   |   +---7a
+|   |   |   |       b9f57b5762668ca942838983165834f471b786
+|   |   |   |       
+|   |   |   +---7b
+|   |   |   |       8a0cb2a9aff96badf32859e210391abe2df9a6
+|   |   |   |       
+|   |   |   +---7d
+|   |   |   |       0edebdde249394228c1bdb3da41b5615d3ff41
+|   |   |   |       
+|   |   |   +---7e
+|   |   |   |       1060246fd6746a14204539a72e199a25469a05
+|   |   |   |       
+|   |   |   +---88
+|   |   |   |       07fcebd17eb76565bd9e8a6eb9f3ee0f91164a
+|   |   |   |       
+|   |   |   +---89
+|   |   |   |       b58f0c42c53296bc2b837fcb4008075121c890
+|   |   |   |       
+|   |   |   +---94
+|   |   |   |       4f9f883c66a3516bef752dc5ad1260d161ee4f
+|   |   |   |       
+|   |   |   +---99
+|   |   |   |       0cc21e6491f96af35dbd28734b61c89761fb36
+|   |   |   |       a6b8423166e8208c1e2e341cc3824725fde8bd
+|   |   |   |       
+|   |   |   +---9a
+|   |   |   |       9a7588ad21824869e3b7c53c9ad7af8fe05a50
+|   |   |   |       
+|   |   |   +---9c
+|   |   |   |       a75be65a8040d7946fd8b450cad3af3b4e07e2
+|   |   |   |       
+|   |   |   +---a0
+|   |   |   |       81db88edb025555dce99b8ca9c15f4d45382ca
+|   |   |   |       
+|   |   |   +---a4
+|   |   |   |       c57dfd13c066dbbc252545bbd4abae6d58648d
+|   |   |   |       
+|   |   |   +---a6
+|   |   |   |       3f27eefdf3cf2cc12033f5ab75570b3224ddce
+|   |   |   |       
+|   |   |   +---a9
+|   |   |   |       3df34774b6503a35ca7c05706c2e99da996a5f
+|   |   |   |       
+|   |   |   +---b6
+|   |   |   |       3965bca92a3dc0fbe9fb548361b749f44ff7a5
+|   |   |   |       
+|   |   |   +---c3
+|   |   |   |       54965a874bdbe6cca81c2afabb8959db4c6322
+|   |   |   |       
+|   |   |   +---c4
+|   |   |   |       ec0bca301ee189b62f371b8d7f1271e666b4e9
+|   |   |   |       
+|   |   |   +---c9
+|   |   |   |       2442c7ccf45a1567cf8a76390bddfa28c74658
+|   |   |   |       585e9cb4d3c3e62b87f0bf32e6e95e4de3d000
+|   |   |   |       
+|   |   |   +---e2
+|   |   |   |       abb7266372a632c71334bf87c43299810a69bb
+|   |   |   |       
+|   |   |   +---e4
+|   |   |   |       14ed7287f96c1f2020360a432368e08129a796
+|   |   |   |       
+|   |   |   +---e6
+|   |   |   |       9de29bb2d1d6434b8b29ae775ad8c2e48c5391
+|   |   |   |       
+|   |   |   +---e8
+|   |   |   |       55df53175c1cdc7106e97d8aed3f5b607d065d
+|   |   |   |       
+|   |   |   +---ed
+|   |   |   |       07f8389b31ea99c20595eaa2d00b1335487e84
+|   |   |   |       4369e00f0292e493fe266aa0e9cda92f9b59a9
+|   |   |   |       
+|   |   |   +---f1
+|   |   |   |       6feaa3eea230adb9c618ea6e01702fecef4c0e
+|   |   |   |       
+|   |   |   +---f6
+|   |   |   |       de003c198cd298f746aba322e295486e9ea49f
+|   |   |   |       
+|   |   |   +---f9
+|   |   |   |       3b3ed40abc2d8f379f3061d9e1250180a93ed9
+|   |   |   |       
+|   |   |   +---fa
+|   |   |   |       1b48b0cd215c677a3f35b96f7c54d876968880
+|   |   |   |       
+|   |   |   +---info
+|   |   |   \---pack
+|   |   \---refs
+|   |       +---heads
+|   |       |       main
+|   |       |       
+|   |       +---remotes
+|   |       |   \---origin
+|   |       |           main
+|   |       |           
+|   |       \---tags
+|   +---data
+|   |       carrigtwohill.db
+|   |       carrigtwohill.db-journal
+|   |       
+|   +---persons
+|   |   |   confidence.py
+|   |   |   seed_data.py
+|   |   |   __init__.py
+|   |   |   
+|   |   \---__pycache__
+|   |           seed_data.cpython-312.pyc
+|   |           __init__.cpython-312.pyc
+|   |           
+|   +---static
+|   |   +---css
+|   |   |       map.css
+|   |   |       
+|   |   +---data
+|   |   |       townlands.geojson
+|   |   |       
+|   |   \---js
+|   |           map.js
+|   |           
+|   +---templates
+|   |       about.html
+|   |       article.html
+|   |       index.html
+|   |       map.html
+|   |       persons.html
+|   |       person_detail.html
+|   |       
+|   \---__pycache__
+|           collect.cpython-312.pyc
+|           db.cpython-310.pyc
+|           db.cpython-312.pyc
+|           new_collectors.cpython-312.pyc
+|           
++---geo
+|   |   geocode_persons.py
+|   |   prepare_townlands.py
+|   |   seed_pois.py
+|   |   
+|   \---__pycache__
+|           geocode_persons.cpython-312.pyc
+|           prepare_townlands.cpython-312.pyc
+|           seed_pois.cpython-312.pyc
+|           
++---persons
+|   |   confidence.py
+|   |   seed_data.py
+|   |   __init__.py
+|   |   
+|   \---__pycache__
+|           confidence.cpython-310.pyc
+|           confidence.cpython-312.pyc
+|           seed_data.cpython-310.pyc
+|           seed_data.cpython-312.pyc
+|           seed_data.cpython-313.pyc
+|           __init__.cpython-310.pyc
+|           __init__.cpython-312.pyc
+|           __init__.cpython-313.pyc
+|           
++---static
+|   +---css
+|   |       map.css
+|   |       
+|   +---data
+|   |       townlands.geojson
+|   |       
+|   \---js
+|           map.js
+|           
++---templates
+|       article.html
+|       index.html
+|       map.html
+|       persons.html
+|       person_detail.html
+|       
+\---__pycache__
+        app.cpython-310.pyc
+        app.cpython-312.pyc
+        app.cpython-313.pyc
+        check_links.cpython-312.pyc
+        collect.cpython-310.pyc
+        collect.cpython-312.pyc
+        collect.cpython-313.pyc
+        db.cpython-310.pyc
+        db.cpython-312.pyc
+        db.cpython-313.pyc
+        new_collectors.cpython-310.pyc
+        new_collectors.cpython-312.pyc
+        new_collectors.cpython-313.pyc
+        
